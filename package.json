@@ -1,0 +1,33 @@
+{
+  "name": "xjson-server",
+  "version": "2.1.0",
+  "description": "XJSON Server with K'UHUL ΩOS Kernel Integration - Trinity OS Browser Runtime",
+  "main": "src/server/index.js",
+  "scripts": {
+    "start": "node src/server/index.js",
+    "dev": "nodemon src/server/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "xjson",
+    "kuhul",
+    "omegaos",
+    "primeos",
+    "service-worker",
+    "kernel",
+    "trinity-os"
+  ],
+  "author": "K'UHUL ASX Framework",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "compression": "^1.7.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

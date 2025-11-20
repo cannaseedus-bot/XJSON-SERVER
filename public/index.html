@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="K'UHUL ΩOS Trinity Kernel - Browser-based OS with PrimeOS Cognitive Shell">
+  <title>ΩOS Trinity Kernel - K'UHUL ASX Framework</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/assets/style.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Consolas', 'Monaco', monospace;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      color: #00ff88;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      border: 2px solid #00ff88;
+      padding: 20px;
+      margin-bottom: 30px;
+      background: rgba(0, 255, 136, 0.05);
+      border-radius: 8px;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #00ff88;
+    }
+
+    .subtitle {
+      color: #66ffaa;
+      font-size: 0.9em;
+    }
+
+    .status-panel {
+      border: 1px solid #00ff88;
+      padding: 15px;
+      margin-bottom: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+    }
+
+    .status-panel h2 {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+      color: #00ffff;
+    }
+
+    .status-item {
+      padding: 5px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .status-label {
+      color: #88ffaa;
+    }
+
+    .status-value {
+      color: #ffff00;
+      font-weight: bold;
+    }
+
+    .status-value.active {
+      color: #00ff00;
+      text-shadow: 0 0 5px #00ff00;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .panel {
+      border: 1px solid #00ff88;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+    }
+
+    .panel h3 {
+      color: #00ffff;
+      margin-bottom: 10px;
+      font-size: 1em;
+    }
+
+    .agent {
+      padding: 8px;
+      margin: 5px 0;
+      background: rgba(0, 255, 136, 0.1);
+      border-left: 3px solid #00ff88;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .agent-name {
+      font-weight: bold;
+    }
+
+    .agent-role {
+      color: #88ffaa;
+      font-size: 0.85em;
+    }
+
+    .command {
+      padding: 8px;
+      margin: 5px 0;
+      background: rgba(0, 255, 255, 0.05);
+      border-left: 3px solid #00ffff;
+      font-size: 0.9em;
+      cursor: pointer;
+    }
+
+    .command:hover {
+      background: rgba(0, 255, 255, 0.15);
+    }
+
+    .terminal {
+      border: 2px solid #00ff88;
+      padding: 15px;
+      background: #000000;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .terminal-line {
+      margin: 3px 0;
+      color: #00ff88;
+    }
+
+    .terminal-line.info {
+      color: #00ffff;
+    }
+
+    .terminal-line.success {
+      color: #00ff00;
+    }
+
+    .terminal-line.error {
+      color: #ff0000;
+    }
+
+    button {
+      background: #00ff88;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 4px;
+      margin: 5px;
+    }
+
+    button:hover {
+      background: #00ffaa;
+      box-shadow: 0 0 10px #00ff88;
+    }
+
+    .glyph {
+      color: #ff00ff;
+      font-weight: bold;
+    }
+
+    footer {
+      margin-top: 30px;
+      padding: 20px;
+      text-align: center;
+      color: #66ffaa;
+      border-top: 1px solid #00ff88;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><span class="glyph">Ω</span>OS Trinity Kernel</h1>
+      <div class="subtitle">K'UHUL ASX Framework v2.1 | PrimeOS Cognitive Shell</div>
+    </header>
+
+    <div class="status-panel">
+      <h2>Kernel Status</h2>
+      <div class="status-item">
+        <span class="status-label">Kernel:</span>
+        <span class="status-value active" id="kernel-status">INITIALIZING</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Service Worker:</span>
+        <span class="status-value" id="sw-status">REGISTERING</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">VFS:</span>
+        <span class="status-value" id="vfs-status">MOUNTING</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Processes:</span>
+        <span class="status-value" id="process-count">0</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <h3>PrimeOS Agents</h3>
+        <div id="agents-list"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Kernel Processes</h3>
+        <div id="processes-list">
+          <div class="agent">
+            <span class="agent-name">vfs_daemon</span>
+            <span class="agent-role">mounting...</span>
+          </div>
+          <div class="agent">
+            <span class="agent-name">cache_daemon</span>
+            <span class="agent-role">initializing...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>PrimeOS Cognitive Commands</h3>
+      <div id="commands-list"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Kernel Terminal</h3>
+      <div class="terminal" id="terminal">
+        <div class="terminal-line">[BOOT] ΩOS Trinity Kernel initializing...</div>
+        <div class="terminal-line info">[INFO] K'UHUL ASX Framework v2.1</div>
+        <div class="terminal-line info">[INFO] Registering service worker...</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Kernel API Tests</h3>
+      <button onclick="testKernelStatus()">Test Kernel Status</button>
+      <button onclick="testSpawnProcess()">Spawn Test Process</button>
+      <button onclick="testPrimeOSAgents()">Query PrimeOS Agents</button>
+      <button onclick="testVFS()">Test VFS</button>
+    </div>
+
+    <footer>
+      <p>ΩOS Trinity Kernel | K'UHUL <span class="glyph">⟁</span> ASX Framework</p>
+      <p>XJSON Server Integration | Browser OS Runtime</p>
+    </footer>
+  </div>
+
+  <script>
+    // Terminal logging
+    const terminal = document.getElementById('terminal');
+    function log(message, type = '') {
+      const line = document.createElement('div');
+      line.className = `terminal-line ${type}`;
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      terminal.appendChild(line);
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/omega-kernel-sw.js')
+        .then(registration => {
+          log('Service Worker registered successfully', 'success');
+          document.getElementById('sw-status').textContent = 'ACTIVE';
+          document.getElementById('sw-status').classList.add('active');
+          return registration;
+        })
+        .catch(error => {
+          log(`Service Worker registration failed: ${error}`, 'error');
+          document.getElementById('sw-status').textContent = 'FAILED';
+        });
+
+      // Listen for kernel ready message
+      navigator.serviceWorker.addEventListener('message', event => {
+        if (event.data.type === 'ΩOS:kernel_ready') {
+          log('ΩOS Kernel ready - boot sequence complete', 'success');
+          document.getElementById('kernel-status').textContent = 'ACTIVE';
+          document.getElementById('vfs-status').textContent = 'MOUNTED';
+          document.getElementById('vfs-status').classList.add('active');
+          initializePrimeOS(event.data.kernel);
+        }
+      });
+    } else {
+      log('Service Workers not supported in this browser', 'error');
+    }
+
+    // Initialize PrimeOS data
+    function initializePrimeOS(kernel) {
+      // Load agents
+      const agentsList = document.getElementById('agents-list');
+      const agents = kernel['⟁primeos']['⟁agents'];
+
+      agentsList.innerHTML = '';
+      Object.entries(agents).forEach(([name, config]) => {
+        const agent = document.createElement('div');
+        agent.className = 'agent';
+        agent.innerHTML = `
+          <div>
+            <div class="agent-name">${name}</div>
+            <div class="agent-role">${config['⟁role']}</div>
+          </div>
+          <div class="status-value active">${config['⟁stat']}</div>
+        `;
+        agentsList.appendChild(agent);
+      });
+
+      // Load commands
+      const commandsList = document.getElementById('commands-list');
+      const commands = kernel['⟁primeos']['⟁commands'];
+
+      commandsList.innerHTML = '';
+      commands.forEach(cmd => {
+        const command = document.createElement('div');
+        command.className = 'command';
+        command.textContent = `> ${cmd}`;
+        command.onclick = () => executePrimeOSCommand(cmd);
+        commandsList.appendChild(command);
+      });
+
+      log('PrimeOS Cognitive Shell initialized', 'info');
+    }
+
+    // API test functions
+    async function testKernelStatus() {
+      try {
+        log('Testing kernel status API...', 'info');
+        const response = await fetch('/api/ΩOS/status');
+        const data = await response.json();
+        log(`Kernel: ${data.kernel} v${data.version}`, 'success');
+        log(`Processes: ${data.processes}`, 'success');
+        document.getElementById('process-count').textContent = data.processes;
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function testSpawnProcess() {
+      try {
+        log('Spawning test process...', 'info');
+        const response = await fetch('/api/ΩOS/process/spawn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pid: `test_${Date.now()}`,
+            code: '⟁Pop⟁test⟁Wo⟁kernel⟁Sek⟁verify⟁Xul',
+            context: { test: true }
+          })
+        });
+        const data = await response.json();
+        log(`Process spawned: ${data.pid}`, 'success');
+        log(`Result: ${JSON.stringify(data.result)}`, 'info');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function testPrimeOSAgents() {
+      try {
+        log('Querying PrimeOS agents...', 'info');
+        const response = await fetch('/api/ΩOS/primeos/agents');
+        const data = await response.json();
+        Object.entries(data.agents).forEach(([name, config]) => {
+          log(`Agent: ${name} - ${config['⟁role']} (${config['⟁stat']})`, 'success');
+        });
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function testVFS() {
+      try {
+        log('Testing Virtual File System...', 'info');
+        const response = await fetch('/api/ΩOS/vfs/list/sys');
+        const data = await response.json();
+        log(`VFS Path: ${data.path}`, 'info');
+        log(`Files: ${JSON.stringify(data.files)}`, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function executePrimeOSCommand(command) {
+      try {
+        log(`Executing: ${command}`, 'info');
+        const response = await fetch(`/api/ΩOS/primeos/command/${encodeURIComponent(command)}`);
+        const data = await response.json();
+        log(`Command executed - PID: ${data.kernel_pid}`, 'success');
+      } catch (error) {
+        log(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Auto-test on load
+    setTimeout(() => {
+      testKernelStatus();
+    }, 2000);
+  </script>
+</body>
+</html>
