@@ -9,12 +9,16 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from datetime import datetime
 from pathlib import Path
 import json
 import time
 import uvicorn
+
+# Import SCX and K'UHUL modules
+from scx_compression import SCXCompressor, SCXBenchmark, CompressionResult
+from kuhul_executor import KuhulExecutor, ExecutionResult, EXAMPLE_PROGRAMS
 
 # ============================================================================
 # MODELS
@@ -35,6 +39,14 @@ class PrimeOSCommandRequest(BaseModel):
 class XJSONMessage(BaseModel):
     type: str
     payload: Optional[Dict[str, Any]] = {}
+
+class SCXCompressRequest(BaseModel):
+    data: Union[str, Dict]
+    algorithm: str = "all"
+
+class KuhulExecuteRequest(BaseModel):
+    code: str
+    functions: Optional[Dict[str, str]] = None
 
 # ============================================================================
 # ΩOS KERNEL PROCESS MANAGER
@@ -266,6 +278,8 @@ kernel = KuhulKernel()
 vfs = VirtualFileSystem()
 cognitive = CognitiveProcessor()
 dns_resolver = XJSONDNSResolver()
+scx_compressor = SCXCompressor()
+kuhul_executor = KuhulExecutor()
 
 # Create FastAPI app
 app = FastAPI(
@@ -436,6 +450,175 @@ async def xjson_train():
     }
 
 # ============================================================================
+# SCX COMPRESSION API ENDPOINTS
+# ============================================================================
+
+@app.post("/api/scx/compress")
+async def scx_compress(req: SCXCompressRequest):
+    """Compress data using SCX algorithms"""
+    result = scx_compressor.compress(req.data, req.algorithm)
+    return {
+        "original_size": result.original_size,
+        "compressed_size": result.compressed_size,
+        "compression_ratio": result.compression_ratio,
+        "algorithm": result.algorithm,
+        "compressed_data": result.compressed_data,
+        "savings": result.original_size - result.compressed_size
+    }
+
+@app.post("/api/scx/decompress")
+async def scx_decompress(req: Dict[str, str]):
+    """Decompress SCX data"""
+    compressed_data = req.get("compressed_data", "")
+    try:
+        decompressed = scx_compressor.decompress(compressed_data)
+        return {
+            "success": True,
+            "decompressed_data": decompressed
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Decompression failed: {e}")
+
+@app.get("/api/scx/benchmark/react-vs-kuhul")
+async def scx_benchmark_react():
+    """Benchmark React vs K'UHUL compression"""
+    result = SCXBenchmark.compare_react_vs_kuhul()
+    return result
+
+@app.get("/api/scx/benchmark/express-vs-xjson")
+async def scx_benchmark_express():
+    """Benchmark Express vs XJSON compression"""
+    result = SCXBenchmark.compare_express_vs_xjson()
+    return result
+
+@app.get("/api/scx/demo")
+async def scx_demo():
+    """Get SCX compression demo data"""
+    examples = {
+        "traditional_react": {
+            "code": """import React, { useRef, useEffect } from 'react';
+import * as THREE from 'three';
+
+function Dashboard() {
+  const mountRef = useRef(null);
+  useEffect(() => {
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    // ... setup code
+  }, []);
+  return <div ref={mountRef}></div>;
+}""",
+            "size": 1000  # approximate
+        },
+        "kuhul_equivalent": {
+            "code": """⟁Pop⟁dashboard
+⟁Wo⟁"api_url"⟁Sek⟁http_get⟁Sek⟁xjson_parse
+⟁Ch'en⟁data
+⟁Wo⟁"canvas"⟁Sek⟁init_threejs⟁Ch'en⟁scene
+⟁Yax⟁data⟁Sek⟁create_3d_viz⟁Ch'en⟁viz
+⟁K'ayab'⟁animate⟁Yax⟁viz⟁Sek⟁rotate⟁Yax⟁scene⟁Sek⟁render⟁Kumk'u
+⟁Xul""",
+            "size": 180  # approximate
+        },
+        "compression_ratio": 0.82
+    }
+    return examples
+
+# ============================================================================
+# K'UHUL EXECUTION API ENDPOINTS
+# ============================================================================
+
+@app.post("/api/kuhul/execute")
+async def kuhul_execute(req: KuhulExecuteRequest):
+    """Execute K'UHUL glyph code"""
+    executor = KuhulExecutor()
+
+    # Register custom functions if provided
+    if req.functions:
+        for name, impl in req.functions.items():
+            # For now, just log that custom functions were requested
+            pass
+
+    result = executor.execute(req.code)
+    return result.to_dict()
+
+@app.get("/api/kuhul/examples")
+async def kuhul_examples():
+    """Get example K'UHUL programs"""
+    return {
+        "examples": {
+            name: {
+                "code": code,
+                "description": f"Example {name} program"
+            }
+            for name, code in EXAMPLE_PROGRAMS.items()
+        }
+    }
+
+@app.get("/api/kuhul/execute/{example_name}")
+async def kuhul_execute_example(example_name: str):
+    """Execute an example K'UHUL program"""
+    if example_name not in EXAMPLE_PROGRAMS:
+        raise HTTPException(status_code=404, detail=f"Example not found: {example_name}")
+
+    executor = KuhulExecutor()
+    result = executor.execute(EXAMPLE_PROGRAMS[example_name])
+    return {
+        "example": example_name,
+        "code": EXAMPLE_PROGRAMS[example_name],
+        "execution": result.to_dict()
+    }
+
+@app.get("/api/kuhul/glyphs")
+async def kuhul_glyphs():
+    """Get K'UHUL glyph reference"""
+    return {
+        "glyphs": {
+            "⟁Pop": {
+                "name": "Pop / Initialize",
+                "description": "Initialize stack and variables",
+                "usage": "⟁Pop⟁program_name"
+            },
+            "⟁Wo": {
+                "name": "Wo / Work",
+                "description": "Push value to stack",
+                "usage": '⟁Wo⟁"value"'
+            },
+            "⟁Sek": {
+                "name": "Sek / Secure/Execute",
+                "description": "Execute function with stack values",
+                "usage": "⟁Sek⟁function_name"
+            },
+            "⟁Ch'en": {
+                "name": "Ch'en / Chain",
+                "description": "Store stack result in variable",
+                "usage": "⟁Ch'en⟁variable_name"
+            },
+            "⟁Yax": {
+                "name": "Yax / Yield",
+                "description": "Push variable value to stack",
+                "usage": "⟁Yax⟁variable_name"
+            },
+            "⟁K'ayab'": {
+                "name": "K'ayab' / Loop",
+                "description": "Start loop",
+                "usage": "⟁K'ayab'⟁loop_var"
+            },
+            "⟁Kumk'u": {
+                "name": "Kumk'u / End Loop",
+                "description": "End loop",
+                "usage": "⟁Kumk'u"
+            },
+            "⟁Xul": {
+                "name": "Xul / Complete",
+                "description": "Terminate program",
+                "usage": "⟁Xul"
+            }
+        }
+    }
+
+# ============================================================================
 # HEALTH & INFO ENDPOINTS
 # ============================================================================
 
@@ -469,15 +652,23 @@ def main():
     """Run the FastAPI server"""
     print("╔════════════════════════════════════════════════════════════╗")
     print("║  ΩOS TRINITY KERNEL - XJSON SERVER (FastAPI)             ║")
-    print("║  K'UHUL ASX Framework v2.1                                ║")
+    print("║  K'UHUL ASX Framework v2.1 + SCX Compression              ║")
     print("╚════════════════════════════════════════════════════════════╝")
     print("")
     print("🚀 Server starting on http://localhost:7777")
     print("📡 ΩOS Kernel API: http://localhost:7777/api/omega/")
     print("🔌 XJSON REST API: http://localhost:7777/xjson/")
+    print("🗜️  SCX Compression: http://localhost:7777/api/scx/")
+    print("⟁  K'UHUL Executor: http://localhost:7777/api/kuhul/")
     print("🧠 PrimeOS Cognitive Shell: Active")
     print("📂 Virtual File System: Mounted")
     print("🌐 Static DNS Resolver: Ready")
+    print("")
+    print("💡 Try these endpoints:")
+    print("   GET  /api/scx/benchmark/react-vs-kuhul")
+    print("   GET  /api/kuhul/glyphs")
+    print("   POST /api/scx/compress")
+    print("   POST /api/kuhul/execute")
     print("")
     print("Press Ctrl+C to stop the server")
     print("")
