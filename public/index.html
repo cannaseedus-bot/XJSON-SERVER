@@ -1,420 +1,1199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="K'UHUL ΩOS Trinity Kernel - Browser-based OS with PrimeOS Cognitive Shell">
-  <title>ΩOS Trinity Kernel - K'UHUL ASX Framework</title>
+  <meta charset="UTF-8" />
+  <title>ΩOS TRINITY KERNEL · ASX SCXQ2 ATOMIC INDEX</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="manifest" href="/manifest.json">
-  <link rel="stylesheet" href="/assets/style.css">
+
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      --bg: #020617;
+      --bg-alt: #030919;
+      --panel: #020815;
+      --panel-soft: #020b18;
+      --border: #1f2937;
+      --accent: #16f2aa;
+      --accent-soft: rgba(22,242,170,0.18);
+      --accent-strong: #22c55e;
+      --hazard: #fbbf24;
+      --text: #e8fff6;
+      --muted: #9ca3af;
+      --muted-soft: #6b7280;
+      --danger: #f97373;
+      --code-bg: #050b16;
+
+      --r-1: 4px;
+      --r-2: 8px;
+      --r-3: 12px;
+      --r-4: 16px;
+
+      --s-1: 4px;
+      --s-2: 8px;
+      --s-3: 12px;
+      --s-4: 16px;
+      --s-5: 24px;
+      --s-6: 32px;
+
+      --shadow-soft: 0 16px 40px rgba(0,0,0,0.58);
+      --shadow-hard: 0 0 0 1px rgba(22,242,170,0.2),
+                     0 22px 50px rgba(0,0,0,0.92);
     }
+
+    * { box-sizing: border-box; }
 
     body {
-      font-family: 'Consolas', 'Monaco', monospace;
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-      color: #00ff88;
-      min-height: 100vh;
-      padding: 20px;
+      margin: 0;
+      background:
+        radial-gradient(circle at top, #020b1c 0, #020617 38%, #00010b 100%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+                   sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
     }
 
-    .container {
-      max-width: 1200px;
+    /* Atomic HTML baseline */
+    [x] {
+      all: unset;
+      display: block;
+      box-sizing: border-box;
+      color: inherit;
+      font: inherit;
+    }
+
+    [xt] {
+      all: unset;
+      display: inline;
+      box-sizing: border-box;
+      color: inherit;
+      font: inherit;
+    }
+
+    /* Layout tokens */
+    [row] { display: flex; flex-direction: row; }
+    [col] { display: flex; flex-direction: column; }
+    [center] { align-items: center; justify-content: center; }
+    [align-center] { align-items: center; }
+    [justify-center] { justify-content: center; }
+    [spread] { justify-content: space-between; }
+    [wrap] { flex-wrap: wrap; }
+
+    [gap="1"] { gap: var(--s-1); }
+    [gap="2"] { gap: var(--s-2); }
+    [gap="3"] { gap: var(--s-3); }
+    [gap="4"] { gap: var(--s-4); }
+    [gap="5"] { gap: var(--s-5); }
+
+    [pad="1"] { padding: var(--s-1); }
+    [pad="2"] { padding: var(--s-2); }
+    [pad="3"] { padding: var(--s-3); }
+    [pad="4"] { padding: var(--s-4); }
+    [pad="5"] { padding: var(--s-5); }
+
+    [w="full"] { width: 100%; }
+    [w="half"] { width: 50%; }
+    [w="auto"] { width: auto; }
+
+    /* Surfaces */
+    [panel] {
+      background: linear-gradient(145deg, var(--panel), var(--panel-soft));
+      border-radius: var(--r-3);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      padding: var(--s-4);
+    }
+
+    [panel-soft] {
+      background: radial-gradient(circle at top left, #020b18, #020617 55%);
+      border-radius: var(--r-2);
+      border: 1px solid rgba(148,163,184,0.35);
+      padding: var(--s-3);
+    }
+
+    [panel-accent] {
+      background: radial-gradient(circle at top left,
+        rgba(22,242,170,0.18), #020815 55%);
+      border-radius: var(--r-3);
+      border: 1px solid rgba(22,242,170,0.55);
+      box-shadow: var(--shadow-hard);
+      padding: var(--s-4);
+    }
+
+    [divider] {
+      border-bottom: 1px solid rgba(148,163,184,0.35);
+      margin: var(--s-3) 0;
+    }
+
+    [strip] {
+      border-radius: var(--r-1);
+      padding: 4px 10px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid rgba(148,163,184,0.5);
+      background:
+        radial-gradient(circle at left, rgba(22,242,170,0.12), transparent 65%);
+      color: var(--muted);
+    }
+
+    [strip-hazard] {
+      border-radius: var(--r-1);
+      padding: 4px 10px;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border: 1px solid rgba(251,191,36,0.8);
+      background:
+        linear-gradient(90deg, rgba(251,191,36,0.18), rgba(30,64,175,0.12));
+      color: var(--hazard);
+    }
+
+    /* Type */
+    [h1] {
+      font-size: 28px;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    [h2] {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    [h3] {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    [label] {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted-soft);
+    }
+
+    [lead] {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    [code] {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular,
+                   Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+                   monospace;
+      font-size: 12px;
+    }
+
+    [code-block] {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular,
+                   Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+                   monospace;
+      font-size: 12px;
+      background: var(--code-bg);
+      border-radius: var(--r-2);
+      border: 1px solid rgba(15,23,42,0.9);
+      padding: var(--s-3);
+      overflow-x: auto;
+      line-height: 1.4;
+      position: relative;
+    }
+
+    /* Pills */
+    [pill] {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      background: rgba(148,163,184,0.08);
+      border: 1px solid rgba(148,163,184,0.4);
+      color: var(--muted);
+    }
+
+    [pill-accent] {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      background: rgba(22,242,170,0.1);
+      border: 1px solid rgba(22,242,170,0.7);
+      color: var(--accent-strong);
+    }
+
+    [pill-hazard] {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      background: rgba(251,191,36,0.14);
+      border: 1px solid rgba(251,191,36,0.85);
+      color: var(--hazard);
+    }
+
+    /* Buttons */
+    [btn] {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid rgba(148,163,184,0.55);
+      background: rgba(15,23,42,0.96);
+      color: var(--muted);
+      cursor: pointer;
+      gap: 8px;
+      user-select: none;
+      transition:
+        background 120ms ease,
+        border-color 120ms ease,
+        transform 80ms ease,
+        box-shadow 120ms ease;
+    }
+
+    [btn]:hover {
+      background: radial-gradient(circle at top,
+        rgba(148,163,184,0.35), rgba(15,23,42,0.98));
+      border-color: rgba(226,232,240,0.9);
+      color: var(--text);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.85);
+    }
+
+    [btn]:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    [btn-accent] {
+      border-color: rgba(22,242,170,0.9);
+      color: var(--accent-strong);
+      background: radial-gradient(circle at top,
+        rgba(22,242,170,0.2), rgba(2,6,23,1));
+    }
+
+    [btn-hazard] {
+      border-color: rgba(251,191,36,0.95);
+      color: var(--hazard);
+      background: radial-gradient(circle at top,
+        rgba(251,191,36,0.23), rgba(15,23,42,1));
+    }
+
+    /* Layout shell */
+    .shell {
+      max-width: 1280px;
       margin: 0 auto;
-    }
-
-    header {
-      border: 2px solid #00ff88;
-      padding: 20px;
-      margin-bottom: 30px;
-      background: rgba(0, 255, 136, 0.05);
-      border-radius: 8px;
-    }
-
-    h1 {
-      font-size: 2em;
-      margin-bottom: 10px;
-      text-shadow: 0 0 10px #00ff88;
-    }
-
-    .subtitle {
-      color: #66ffaa;
-      font-size: 0.9em;
-    }
-
-    .status-panel {
-      border: 1px solid #00ff88;
-      padding: 15px;
-      margin-bottom: 20px;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 4px;
-    }
-
-    .status-panel h2 {
-      font-size: 1.2em;
-      margin-bottom: 10px;
-      color: #00ffff;
-    }
-
-    .status-item {
-      padding: 5px 0;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .status-label {
-      color: #88ffaa;
-    }
-
-    .status-value {
-      color: #ffff00;
-      font-weight: bold;
-    }
-
-    .status-value.active {
-      color: #00ff00;
-      text-shadow: 0 0 5px #00ff00;
+      padding: var(--s-5) var(--s-4) var(--s-6);
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      margin-bottom: 20px;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: var(--s-4);
+      margin-top: var(--s-4);
     }
 
-    .panel {
-      border: 1px solid #00ff88;
-      padding: 15px;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 4px;
+    @media (max-width: 1024px) {
+      .grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
 
-    .panel h3 {
-      color: #00ffff;
-      margin-bottom: 10px;
-      font-size: 1em;
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
     }
 
-    .agent {
-      padding: 8px;
-      margin: 5px 0;
-      background: rgba(0, 255, 136, 0.1);
-      border-left: 3px solid #00ff88;
+    .dns-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .dns-table th,
+    .dns-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(30,41,59,0.95);
+      text-align: left;
+    }
+
+    .dns-table th {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 10px;
+      color: var(--muted-soft);
+    }
+
+    .dns-table td:first-child {
+      font-family: "JetBrains Mono", ui-monospace;
+      font-size: 11px;
+      color: var(--accent-strong);
+    }
+
+    .agent-card {
+      padding: 10px;
+      margin: 6px 0;
+      background: rgba(22,242,170,0.08);
+      border-left: 3px solid var(--accent-strong);
+      border-radius: var(--r-1);
       display: flex;
       justify-content: space-between;
+      align-items: center;
     }
 
     .agent-name {
-      font-weight: bold;
+      font-weight: 600;
+      font-size: 13px;
     }
 
     .agent-role {
-      color: #88ffaa;
-      font-size: 0.85em;
+      font-size: 11px;
+      color: var(--muted);
     }
 
-    .command {
-      padding: 8px;
+    .command-item {
+      padding: 8px 10px;
       margin: 5px 0;
-      background: rgba(0, 255, 255, 0.05);
-      border-left: 3px solid #00ffff;
-      font-size: 0.9em;
+      background: rgba(22,242,170,0.05);
+      border-left: 2px solid rgba(22,242,170,0.5);
+      border-radius: var(--r-1);
       cursor: pointer;
+      font-family: "JetBrains Mono", ui-monospace;
+      font-size: 12px;
+      transition: all 120ms ease;
     }
 
-    .command:hover {
-      background: rgba(0, 255, 255, 0.15);
+    .command-item:hover {
+      background: rgba(22,242,170,0.15);
+      border-left-color: var(--accent-strong);
+      transform: translateX(4px);
     }
 
-    .terminal {
-      border: 2px solid #00ff88;
-      padding: 15px;
-      background: #000000;
-      border-radius: 4px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.9em;
-      max-height: 400px;
+    #log-panel {
+      min-height: 200px;
+      max-height: 350px;
       overflow-y: auto;
+      font-family: "JetBrains Mono", ui-monospace;
+      font-size: 11px;
+      background: radial-gradient(circle at top left,
+        rgba(15,23,42,1), rgba(3,7,18,1));
+      border-radius: var(--r-2);
+      border: 1px solid rgba(15,23,42,1);
+      padding: var(--s-3);
+      line-height: 1.5;
     }
 
-    .terminal-line {
-      margin: 3px 0;
-      color: #00ff88;
+    .log-line {
+      white-space: pre-wrap;
+      color: var(--muted-soft);
+      margin: 2px 0;
     }
 
-    .terminal-line.info {
-      color: #00ffff;
+    .log-line.hazard { color: var(--hazard); }
+    .log-line.ok { color: var(--accent-strong); }
+    .log-line.err { color: var(--danger); }
+    .log-line.info { color: #60a5fa; }
+
+    .connection-status {
+      padding: 6px 12px;
+      border-radius: var(--r-2);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      display: inline-block;
+      margin-top: 6px;
     }
 
-    .terminal-line.success {
-      color: #00ff00;
+    .status-connected {
+      background: rgba(22,242,170,0.15);
+      color: var(--accent-strong);
+      border: 1px solid rgba(22,242,170,0.5);
     }
 
-    .terminal-line.error {
-      color: #ff0000;
+    .status-disconnected {
+      background: rgba(248,113,113,0.15);
+      color: var(--danger);
+      border: 1px solid rgba(248,113,113,0.5);
     }
 
-    button {
-      background: #00ff88;
-      color: #000;
-      border: none;
-      padding: 10px 20px;
-      font-family: 'Consolas', 'Monaco', monospace;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 4px;
-      margin: 5px;
-    }
-
-    button:hover {
-      background: #00ffaa;
-      box-shadow: 0 0 10px #00ff88;
+    .status-pending {
+      background: rgba(251,191,36,0.15);
+      color: var(--hazard);
+      border: 1px solid rgba(251,191,36,0.5);
     }
 
     .glyph {
       color: #ff00ff;
       font-weight: bold;
-    }
-
-    footer {
-      margin-top: 30px;
-      padding: 20px;
-      text-align: center;
-      color: #66ffaa;
-      border-top: 1px solid #00ff88;
+      text-shadow: 0 0 8px rgba(255,0,255,0.6);
     }
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <header>
-      <h1><span class="glyph">Ω</span>OS Trinity Kernel</h1>
-      <div class="subtitle">K'UHUL ASX Framework v2.1 | PrimeOS Cognitive Shell</div>
-    </header>
 
-    <div class="status-panel">
-      <h2>Kernel Status</h2>
-      <div class="status-item">
-        <span class="status-label">Kernel:</span>
-        <span class="status-value active" id="kernel-status">INITIALIZING</span>
-      </div>
-      <div class="status-item">
-        <span class="status-label">Service Worker:</span>
-        <span class="status-value" id="sw-status">REGISTERING</span>
-      </div>
-      <div class="status-item">
-        <span class="status-label">VFS:</span>
-        <span class="status-value" id="vfs-status">MOUNTING</span>
-      </div>
-      <div class="status-item">
-        <span class="status-label">Processes:</span>
-        <span class="status-value" id="process-count">0</span>
-      </div>
-    </div>
+<div class="shell">
 
-    <div class="grid">
-      <div class="panel">
-        <h3>PrimeOS Agents</h3>
-        <div id="agents-list"></div>
+  <!-- HEADER: ΩOS + SCXQ2 FUSION BANNER -->
+  <header x panel-accent col gap="3">
+    <div row spread align-center gap="3" wrap>
+      <div col gap="2" style="flex: 1; min-width: 300px;">
+        <div strip-hazard>
+          ☣ SCXQ2 ATOMIC · <span class="glyph">Ω</span>OS TRINITY KERNEL
+        </div>
+        <div h1><span class="glyph">Ω</span>OS · ASX SCXQ2 · XJSON BRIDGE</div>
+        <div lead>
+          K'UHUL ΩOS Trinity Kernel merged with ASX Atomic HTML/CSS + SCXQ2 hazard cipher.
+          FastAPI backend, Service Worker kernel, XJSON REST bridge, and PrimeOS cognitive shell.
+        </div>
       </div>
 
-      <div class="panel">
-        <h3>Kernel Processes</h3>
-        <div id="processes-list">
-          <div class="agent">
-            <span class="agent-name">vfs_daemon</span>
-            <span class="agent-role">mounting...</span>
-          </div>
-          <div class="agent">
-            <span class="agent-name">cache_daemon</span>
-            <span class="agent-role">initializing...</span>
-          </div>
+      <div col align-center gap="2" style="min-width: 280px;">
+        <div label>INTEGRATED STACK</div>
+        <div class="badge-row">
+          <div pill-accent>ΩOS Kernel</div>
+          <div pill-accent>Atomic HTML</div>
+          <div pill-hazard>SCXQ2</div>
+          <div pill>XJSON REST</div>
+          <div pill>PrimeOS AI</div>
+          <div pill>FastAPI</div>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <button x btn btn-accent id="btn-render-dash">
+            ☣ Render SCXQ2 Dashboard
+          </button>
         </div>
       </div>
     </div>
 
-    <div class="panel">
-      <h3>PrimeOS Cognitive Commands</h3>
-      <div id="commands-list"></div>
-    </div>
+    <div divider></div>
 
-    <div class="panel">
-      <h3>Kernel Terminal</h3>
-      <div class="terminal" id="terminal">
-        <div class="terminal-line">[BOOT] ΩOS Trinity Kernel initializing...</div>
-        <div class="terminal-line info">[INFO] K'UHUL ASX Framework v2.1</div>
-        <div class="terminal-line info">[INFO] Registering service worker...</div>
+    <!-- Kernel Status Row -->
+    <div row wrap gap="3" id="kernel-status-row">
+      <div col gap="1" style="flex: 1;">
+        <div label>Kernel</div>
+        <div class="connection-status status-pending" id="kernel-status">INITIALIZING</div>
+      </div>
+      <div col gap="1" style="flex: 1;">
+        <div label>Service Worker</div>
+        <div class="connection-status status-pending" id="sw-status">REGISTERING</div>
+      </div>
+      <div col gap="1" style="flex: 1;">
+        <div label>XJSON Bridge</div>
+        <div class="connection-status status-disconnected" id="xjson-status">DISCONNECTED</div>
+      </div>
+      <div col gap="1" style="flex: 1;">
+        <div label>VFS</div>
+        <div class="connection-status status-pending" id="vfs-status">MOUNTING</div>
+      </div>
+      <div col gap="1" style="flex: 1;">
+        <div label>Processes</div>
+        <div class="connection-status status-pending" id="process-count">0</div>
       </div>
     </div>
+  </header>
 
-    <div class="panel">
-      <h3>Kernel API Tests</h3>
-      <button onclick="testKernelStatus()">Test Kernel Status</button>
-      <button onclick="testSpawnProcess()">Spawn Test Process</button>
-      <button onclick="testPrimeOSAgents()">Query PrimeOS Agents</button>
-      <button onclick="testVFS()">Test VFS</button>
-    </div>
+  <div class="grid">
 
-    <footer>
-      <p>ΩOS Trinity Kernel | K'UHUL <span class="glyph">⟁</span> ASX Framework</p>
-      <p>XJSON Server Integration | Browser OS Runtime</p>
-    </footer>
+    <!-- LEFT SIDEBAR: DNS + AGENTS + CONTROLS -->
+    <aside x col gap="4">
+
+      <!-- XJSON DNS -->
+      <section x panel-soft col gap="3">
+        <div h3>XJSON Static DNS</div>
+        <div lead>
+          Local hostname resolution for ΩOS components:
+        </div>
+
+        <div row gap="2" style="margin-top: 6px;">
+          <div col gap="1" style="flex: 1;">
+            <div label>Browser Host</div>
+            <div code id="host-value">(detecting...)</div>
+          </div>
+        </div>
+
+        <table class="dns-table" style="margin-top: 8px;">
+          <thead>
+            <tr>
+              <th>Hostname</th>
+              <th>Address</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="dns-body">
+            <!-- Filled by runtime -->
+          </tbody>
+        </table>
+
+        <div row wrap gap="2" style="margin-top: 8px;">
+          <button x btn id="btn-connect-xjson">Connect XJSON</button>
+          <button x btn id="btn-ping-xjson">Ping /ping</button>
+          <button x btn id="btn-resolve-dns">Resolve DNS</button>
+        </div>
+      </section>
+
+      <!-- PrimeOS Agents -->
+      <section x panel-soft col gap="3">
+        <div h3>PrimeOS Agents</div>
+        <div lead>Multi-agent cognitive orchestration:</div>
+        <div id="agents-list"></div>
+      </section>
+
+      <!-- Kernel Processes -->
+      <section x panel-soft col gap="3">
+        <div h3>Kernel Processes</div>
+        <div id="processes-list">
+          <div class="agent-card">
+            <div>
+              <div class="agent-name">vfs_daemon</div>
+              <div class="agent-role">Virtual file system</div>
+            </div>
+            <div pill>init</div>
+          </div>
+          <div class="agent-card">
+            <div>
+              <div class="agent-name">cache_daemon</div>
+              <div class="agent-role">Multi-layer cache</div>
+            </div>
+            <div pill>init</div>
+          </div>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- RIGHT MAIN: COMMANDS + TERMINAL + CONTROLS -->
+    <main x col gap="4">
+
+      <!-- PrimeOS Commands -->
+      <section x panel col gap="3">
+        <div h2>PrimeOS Cognitive Commands</div>
+        <div lead>
+          Execute natural language commands through the PrimeOS cognitive shell:
+        </div>
+        <div id="commands-list"></div>
+      </section>
+
+      <!-- Kernel Terminal -->
+      <section x panel col gap="3">
+        <div h2>Kernel Terminal</div>
+        <div id="log-panel"></div>
+      </section>
+
+      <!-- Runtime Controls -->
+      <section x panel col gap="3">
+        <div h2>Runtime Controls</div>
+        <div row wrap gap="2">
+          <button x btn btn-accent id="btn-render-dash-2">☣ SCXQ2 Dashboard</button>
+          <button x btn btn-hazard id="btn-render-adv">☣ Advanced View</button>
+          <button x btn id="btn-clear-ui">Clear UI</button>
+          <button x btn id="btn-show-packets">Show Packets</button>
+          <button x btn btn-accent id="btn-test-kernel">Test Kernel</button>
+          <button x btn id="btn-spawn-process">Spawn Process</button>
+          <button x btn id="btn-test-vfs">Test VFS</button>
+          <button x btn id="btn-query-agents">Query Agents</button>
+        </div>
+        <div id="ui-root" style="margin-top: var(--s-3);"></div>
+      </section>
+
+      <!-- SCX Cipher Demo -->
+      <section x panel-soft col gap="3">
+        <div h3>SCX Mini-Cipher Demo</div>
+        <div lead>
+          K'UHUL glyph control-flow execution demonstration:
+        </div>
+
+        <div code-block>
+const scx = "(?) user.score ≥ 100 (∴) (💬>) 'Level up!' (⊕) user.score";
+// Symbols: (?) = if | (∴) = then | (💬>) = message | (⊕) = increment
+        </div>
+
+        <div x col gap="2" style="margin-top: 8px;">
+          <div code style="padding: 8px; background: var(--code-bg); border-radius: var(--r-1);" id="cipher-preview">
+            Click "Run SCX" to execute...
+          </div>
+          <button x btn id="btn-run-cipher">Run SCX Cipher</button>
+        </div>
+      </section>
+
+    </main>
   </div>
 
-  <script>
-    // Terminal logging
-    const terminal = document.getElementById('terminal');
-    function log(message, type = '') {
-      const line = document.createElement('div');
-      line.className = `terminal-line ${type}`;
-      line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-      terminal.appendChild(line);
-      terminal.scrollTop = terminal.scrollHeight;
+  <!-- Footer -->
+  <footer x panel-soft col center gap="2" style="margin-top: var(--s-5);">
+    <div code style="color: var(--accent-strong);">
+      <span class="glyph">Ω</span>OS Trinity Kernel | K'UHUL <span class="glyph">⟁</span> ASX Framework v2.1
+    </div>
+    <div lead>
+      FastAPI Backend · XJSON REST Bridge · PrimeOS Cognitive Shell · SCXQ2 Atomic HTML
+    </div>
+  </footer>
+</div>
+
+<!-- RUNTIME LAYER -->
+<script>
+/* ============================================================================
+   LOGGING
+   ============================================================================ */
+const Log = {
+  node: null,
+  ensure() {
+    if (!this.node) this.node = document.getElementById("log-panel");
+  },
+  line(msg, cls) {
+    this.ensure();
+    const div = document.createElement("div");
+    div.className = "log-line" + (cls ? " " + cls : "");
+    const time = new Date().toLocaleTimeString();
+    div.textContent = `[${time}] ${msg}`;
+    this.node.appendChild(div);
+    this.node.scrollTop = this.node.scrollHeight;
+  },
+  clear() {
+    this.ensure();
+    this.node.innerHTML = "";
+  }
+};
+
+/* ============================================================================
+   SCXQ2 HAZARD CIPHER LAYER
+   ============================================================================ */
+const SCXQ2 = {
+  HAZ: "☣SCX:",
+  PACKETS: {
+    DASH: "☣SCX:DASH",
+    ADV:  "☣SCX:ADV"
+  },
+
+  decode(packetId) {
+    if (!packetId || !packetId.startsWith(this.HAZ)) {
+      Log.line("SCXQ2: rejected non-hazard packet", "hazard");
+      return [];
     }
 
-    // Service Worker Registration
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/omega-kernel-sw.js')
-        .then(registration => {
-          log('Service Worker registered successfully', 'success');
-          document.getElementById('sw-status').textContent = 'ACTIVE';
-          document.getElementById('sw-status').classList.add('active');
-          return registration;
-        })
-        .catch(error => {
-          log(`Service Worker registration failed: ${error}`, 'error');
-          document.getElementById('sw-status').textContent = 'FAILED';
-        });
+    let raw;
+    switch (packetId) {
+      case this.PACKETS.DASH:
+        raw = this._dash();
+        break;
+      case this.PACKETS.ADV:
+        raw = this._adv();
+        break;
+      default:
+        Log.line("SCXQ2: unknown packet: " + packetId, "hazard");
+        return [];
+    }
 
-      // Listen for kernel ready message
-      navigator.serviceWorker.addEventListener('message', event => {
-        if (event.data.type === 'ΩOS:kernel_ready') {
-          log('ΩOS Kernel ready - boot sequence complete', 'success');
-          document.getElementById('kernel-status').textContent = 'ACTIVE';
-          document.getElementById('vfs-status').textContent = 'MOUNTED';
-          document.getElementById('vfs-status').classList.add('active');
-          initializePrimeOS(event.data.kernel);
+    return raw.map(this._normalize);
+  },
+
+  _dash() {
+    return [
+      {
+        k: "b",
+        i: "scxq2:overview",
+        c: "Overview",
+        p: {
+          t: "SCXQ2 ΩOS Atomic Dashboard",
+          s: "Integrated K'UHUL ΩOS kernel with ASX SCXQ2 atomic runtime",
+          b: ["ΩOS Kernel", "SCXQ2", "XJSON", "PrimeOS"]
         }
-      });
-    } else {
-      log('Service Workers not supported in this browser', 'error');
+      },
+      {
+        k: "b",
+        i: "scxq2:metrics",
+        c: "MetricRow",
+        p: {
+          t: "System Metrics",
+          m: [
+            { l: "Kernel", v: "ACTIVE", s: "ok" },
+            { l: "Processes", v: "2", s: "ok" },
+            { l: "VFS", v: "MOUNTED", s: "ok" },
+            { l: "XJSON", v: "READY", s: "ok" }
+          ]
+        }
+      }
+    ];
+  },
+
+  _adv() {
+    return [
+      {
+        k: "b",
+        i: "scxq2:advanced",
+        c: "AdvancedView",
+        p: {
+          t: "Advanced Kernel Diagnostics",
+          data: "Full system status and metrics"
+        }
+      }
+    ];
+  },
+
+  _normalize(raw) {
+    return {
+      type: "asx-block",
+      id: raw.i,
+      component: raw.c,
+      encrypted: true,
+      cipher: "SCXQ2-hazard",
+      props: (function (p) {
+        const out = {};
+        if (p.t) out.title = p.t;
+        if (p.s) out.subtitle = p.s;
+        if (p.b) out.badges = p.b;
+        if (p.m) out.metrics = p.m;
+        if (p.data) out.data = p.data;
+        return out;
+      })(raw.p || {})
+    };
+  }
+};
+
+/* ============================================================================
+   ASX BLOCK RUNTIME
+   ============================================================================ */
+const ASX = {
+  Components: {},
+
+  registerComponent(name, renderFn) {
+    this.Components[name] = renderFn;
+  },
+
+  renderBlock(block) {
+    const component = this.Components[block.component];
+    if (!component) {
+      return `<div style="color:var(--danger);">Unknown component: ${block.component}</div>`;
     }
+    try {
+      return component(block.props || {}, block);
+    } catch (err) {
+      return `<div style="color:var(--danger);">Render error: ${err.message}</div>`;
+    }
+  },
 
-    // Initialize PrimeOS data
-    function initializePrimeOS(kernel) {
-      // Load agents
-      const agentsList = document.getElementById('agents-list');
-      const agents = kernel['⟁primeos']['⟁agents'];
+  renderBlocks(blocks, containerId) {
+    const node = document.getElementById(containerId);
+    if (!node) return;
+    const html = blocks.map(b => this.renderBlock(b)).join("");
+    node.innerHTML = html;
+  },
 
-      agentsList.innerHTML = '';
-      Object.entries(agents).forEach(([name, config]) => {
-        const agent = document.createElement('div');
-        agent.className = 'agent';
-        agent.innerHTML = `
+  renderPacket(packetId, containerId) {
+    const blocks = SCXQ2.decode(packetId);
+    Log.line(`ASX: rendering ${blocks.length} block(s) from ${packetId}`, "ok");
+    this.renderBlocks(blocks, containerId);
+  },
+
+  initComponents() {
+    this.registerComponent("Overview", (props) => `
+      <div x panel col gap="2">
+        <div h3>${props.title || "Overview"}</div>
+        <div lead>${props.subtitle || ""}</div>
+        <div class="badge-row">
+          ${(props.badges || []).map(b => `<div pill-accent>${b}</div>`).join("")}
+        </div>
+      </div>
+    `);
+
+    this.registerComponent("MetricRow", (props) => `
+      <div x panel-soft col gap="2">
+        <div h3>${props.title || "Metrics"}</div>
+        <div row wrap gap="2">
+          ${(props.metrics || []).map(m => `
+            <div x pad="2" style="
+              background: radial-gradient(circle, rgba(15,23,42,1), rgba(15,23,42,1));
+              border: 1px solid ${m.s === "ok" ? "var(--accent-strong)" : "var(--danger)"};
+              border-radius: var(--r-2);
+              flex: 1 1 100px;
+              text-align: center;
+            ">
+              <div label>${m.l}</div>
+              <div style="font-size:16px;font-weight:600;margin-top:4px;">
+                ${m.v}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `);
+
+    this.registerComponent("AdvancedView", (props) => `
+      <div x panel col gap="2">
+        <div h3>${props.title || "Advanced"}</div>
+        <div lead>${props.data || "No data"}</div>
+      </div>
+    `);
+  }
+};
+
+/* ============================================================================
+   XJSON DNS RESOLVER
+   ============================================================================ */
+const DNS = {
+  records: {
+    "xjson.local": "127.0.0.1",
+    "rig.local": "127.0.0.1",
+    "hive.local": "127.0.0.1",
+    "omegaos.local": "127.0.0.1",
+    "primeos.local": "127.0.0.1"
+  },
+  resolved: {},
+
+  resolve(host) {
+    const addr = this.records[host] || "127.0.0.1";
+    this.resolved[host] = {
+      addr: addr,
+      status: "resolved",
+      timestamp: new Date().toISOString()
+    };
+    return addr;
+  },
+
+  resolveAll() {
+    Object.keys(this.records).forEach(host => {
+      this.resolve(host);
+    });
+    Log.line("DNS: All entries resolved", "ok");
+  },
+
+  mountTable() {
+    const body = document.getElementById("dns-body");
+    if (!body) return;
+    body.innerHTML = "";
+    Object.keys(this.records).forEach((h) => {
+      const tr = document.createElement("tr");
+      const addr = this.records[h];
+      const resolved = this.resolved[h];
+
+      tr.innerHTML = `
+        <td>${h}</td>
+        <td>${addr}</td>
+        <td>
+          <span class="connection-status ${resolved ? 'status-connected' : 'status-pending'}" style="padding:2px 6px;font-size:10px;">
+            ${resolved ? 'OK' : 'Pending'}
+          </span>
+        </td>
+      `;
+      body.appendChild(tr);
+    });
+  }
+};
+
+/* ============================================================================
+   XJSON REST BRIDGE
+   ============================================================================ */
+const XJSON = {
+  port: 7777,
+  basePath: "/xjson",
+  connected: false,
+
+  getHost() {
+    return window.location.hostname || "127.0.0.1";
+  },
+
+  url(endpoint) {
+    const host = this.getHost();
+    return `http://${host}:${this.port}${this.basePath}${endpoint}`;
+  },
+
+  async connect() {
+    const target = this.url("");
+    Log.line("[XJSON] Connecting to: " + target, "info");
+    this.updateStatus("pending");
+
+    try {
+      const response = await fetch(this.url("/status"));
+      if (response.ok) {
+        this.connected = true;
+        this.updateStatus("connected");
+        const data = await response.json();
+        Log.line("[XJSON] Connected! Server: " + data.server, "ok");
+        return true;
+      }
+    } catch (err) {
+      this.connected = false;
+      this.updateStatus("disconnected");
+      Log.line("[XJSON] Connection failed: " + err.message, "err");
+    }
+    return false;
+  },
+
+  async ping() {
+    try {
+      Log.line("[XJSON] Pinging /ping...", "info");
+      const response = await fetch(this.url("/ping"));
+      const data = await response.json();
+      Log.line(`[XJSON] Pong! Server: ${data.server} v${data.version}`, "ok");
+    } catch (err) {
+      Log.line("[XJSON] Ping failed: " + err.message, "err");
+    }
+  },
+
+  updateStatus(status) {
+    const statusEl = document.getElementById("xjson-status");
+    if (statusEl) {
+      statusEl.className = "connection-status status-" + status;
+      statusEl.textContent = status.toUpperCase();
+    }
+  }
+};
+
+/* ============================================================================
+   ΩOS KERNEL API
+   ============================================================================ */
+const OmegaOS = {
+  async getStatus() {
+    try {
+      const response = await fetch("/api/omega/status");
+      const data = await response.json();
+      Log.line(`Kernel: ${data.kernel} v${data.version} | ${data.processes} processes`, "ok");
+      document.getElementById("process-count").textContent = data.processes;
+      document.getElementById("kernel-status").className = "connection-status status-connected";
+      document.getElementById("kernel-status").textContent = "ACTIVE";
+      return data;
+    } catch (err) {
+      Log.line("Kernel status error: " + err.message, "err");
+    }
+  },
+
+  async spawnProcess() {
+    try {
+      Log.line("Spawning kernel process...", "info");
+      const response = await fetch("/api/omega/process/spawn", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pid: `test_${Date.now()}`,
+          code: "⟁Pop⟁test⟁Wo⟁kernel⟁Sek⟁verify⟁Xul",
+          context: { test: true }
+        })
+      });
+      const data = await response.json();
+      Log.line(`Process ${data.pid} spawned: ${data.result}`, "ok");
+    } catch (err) {
+      Log.line("Spawn error: " + err.message, "err");
+    }
+  },
+
+  async testVFS() {
+    try {
+      Log.line("Testing VFS...", "info");
+      const response = await fetch("/api/omega/vfs/list/sys");
+      const data = await response.json();
+      Log.line(`VFS /${data.path}: ${data.files.length} files`, "ok");
+      document.getElementById("vfs-status").className = "connection-status status-connected";
+      document.getElementById("vfs-status").textContent = "MOUNTED";
+    } catch (err) {
+      Log.line("VFS error: " + err.message, "err");
+    }
+  },
+
+  async queryAgents() {
+    try {
+      Log.line("Querying PrimeOS agents...", "info");
+      const response = await fetch("/api/omega/primeos/agents");
+      const data = await response.json();
+
+      const agentsList = document.getElementById("agents-list");
+      agentsList.innerHTML = "";
+
+      Object.entries(data.agents).forEach(([name, config]) => {
+        Log.line(`Agent: ${name} - ${config.role} [${config.status}]`, "ok");
+        const card = document.createElement("div");
+        card.className = "agent-card";
+        card.innerHTML = `
           <div>
             <div class="agent-name">${name}</div>
-            <div class="agent-role">${config['⟁role']}</div>
+            <div class="agent-role">${config.role}</div>
           </div>
-          <div class="status-value active">${config['⟁stat']}</div>
+          <div pill-accent>${config.status}</div>
         `;
-        agentsList.appendChild(agent);
+        agentsList.appendChild(card);
+      });
+    } catch (err) {
+      Log.line("Agents error: " + err.message, "err");
+    }
+  },
+
+  async executeCommand(command) {
+    try {
+      Log.line(`Executing: ${command}`, "info");
+      const response = await fetch(`/api/omega/primeos/command/${encodeURIComponent(command)}`);
+      const data = await response.json();
+      Log.line(`PID ${data.kernel_pid}: ${data.thought_trace}`, "ok");
+    } catch (err) {
+      Log.line("Command error: " + err.message, "err");
+    }
+  }
+};
+
+/* ============================================================================
+   SCX CIPHER DEMO
+   ============================================================================ */
+const CipherMap = {
+  "(?)":  "if",
+  "(∴)":  "then",
+  "(💬>)": "message",
+  "(⊕)":  "increment"
+};
+
+const CipherDemo = {
+  state: { user: { score: 95 } },
+
+  translate(scxLine) {
+    return scxLine
+      .replace(/\(\?\)/g, CipherMap["(?)"])
+      .replace(/\(∴\)/g, CipherMap["(∴)"])
+      .replace(/\(💬>\)/g, CipherMap["(💬>)"])
+      .replace(/\(⊕\)/g, CipherMap["(⊕)"]);
+  },
+
+  run() {
+    const line = "(?) user.score ≥ 100 (∴) (💬>) 'Level up!' (⊕) user.score";
+    const human = this.translate(line);
+    const previewNode = document.getElementById("cipher-preview");
+    previewNode.textContent = `SCX:  ${line}\nDecoded:  ${human}\n\nResult: score=${this.state.user.score}`;
+
+    if (this.state.user.score >= 100) {
+      Log.line("SCX: Level up! (score " + this.state.user.score + ")", "ok");
+      this.state.user.score++;
+    } else {
+      Log.line("SCX: score=" + this.state.user.score + " → keep playing", "hazard");
+    }
+  }
+};
+
+/* ============================================================================
+   SERVICE WORKER REGISTRATION
+   ============================================================================ */
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/omega-kernel-sw.js')
+      .then(registration => {
+        Log.line('Service Worker registered successfully', 'ok');
+        document.getElementById('sw-status').className = 'connection-status status-connected';
+        document.getElementById('sw-status').textContent = 'ACTIVE';
+        return registration;
+      })
+      .catch(error => {
+        Log.line(`Service Worker registration failed: ${error}`, 'err');
+        document.getElementById('sw-status').className = 'connection-status status-disconnected';
+        document.getElementById('sw-status').textContent = 'FAILED';
       });
 
-      // Load commands
-      const commandsList = document.getElementById('commands-list');
-      const commands = kernel['⟁primeos']['⟁commands'];
-
-      commandsList.innerHTML = '';
-      commands.forEach(cmd => {
-        const command = document.createElement('div');
-        command.className = 'command';
-        command.textContent = `> ${cmd}`;
-        command.onclick = () => executePrimeOSCommand(cmd);
-        commandsList.appendChild(command);
-      });
-
-      log('PrimeOS Cognitive Shell initialized', 'info');
-    }
-
-    // API test functions
-    async function testKernelStatus() {
-      try {
-        log('Testing kernel status API...', 'info');
-        const response = await fetch('/api/ΩOS/status');
-        const data = await response.json();
-        log(`Kernel: ${data.kernel} v${data.version}`, 'success');
-        log(`Processes: ${data.processes}`, 'success');
-        document.getElementById('process-count').textContent = data.processes;
-      } catch (error) {
-        log(`Error: ${error.message}`, 'error');
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data.type === 'ΩOS:kernel_ready') {
+        Log.line('ΩOS Kernel ready - boot sequence complete', 'ok');
       }
-    }
+    });
+  } else {
+    Log.line('Service Workers not supported', 'err');
+  }
+}
 
-    async function testSpawnProcess() {
-      try {
-        log('Spawning test process...', 'info');
-        const response = await fetch('/api/ΩOS/process/spawn', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            pid: `test_${Date.now()}`,
-            code: '⟁Pop⟁test⟁Wo⟁kernel⟁Sek⟁verify⟁Xul',
-            context: { test: true }
-          })
-        });
-        const data = await response.json();
-        log(`Process spawned: ${data.pid}`, 'success');
-        log(`Result: ${JSON.stringify(data.result)}`, 'info');
-      } catch (error) {
-        log(`Error: ${error.message}`, 'error');
-      }
-    }
+/* ============================================================================
+   BOOTSTRAP
+   ============================================================================ */
+document.addEventListener("DOMContentLoaded", async () => {
+  // Initialize logging
+  Log.clear();
+  Log.line("ΩOS TRINITY KERNEL + SCXQ2 ATOMIC RUNTIME", "hazard");
+  Log.line("K'UHUL ASX Framework v2.1 | FastAPI Backend", "ok");
+  Log.line("════════════════════════════════════════", "info");
 
-    async function testPrimeOSAgents() {
-      try {
-        log('Querying PrimeOS agents...', 'info');
-        const response = await fetch('/api/ΩOS/primeos/agents');
-        const data = await response.json();
-        Object.entries(data.agents).forEach(([name, config]) => {
-          log(`Agent: ${name} - ${config['⟁role']} (${config['⟁stat']})`, 'success');
-        });
-      } catch (error) {
-        log(`Error: ${error.message}`, 'error');
-      }
-    }
+  // Set browser host
+  const hostNode = document.getElementById("host-value");
+  if (hostNode) {
+    hostNode.textContent = window.location.hostname || "127.0.0.1";
+  }
 
-    async function testVFS() {
-      try {
-        log('Testing Virtual File System...', 'info');
-        const response = await fetch('/api/ΩOS/vfs/list/sys');
-        const data = await response.json();
-        log(`VFS Path: ${data.path}`, 'info');
-        log(`Files: ${JSON.stringify(data.files)}`, 'success');
-      } catch (error) {
-        log(`Error: ${error.message}`, 'error');
-      }
-    }
+  // Initialize components
+  ASX.initComponents();
+  DNS.mountTable();
 
-    async function executePrimeOSCommand(command) {
-      try {
-        log(`Executing: ${command}`, 'info');
-        const response = await fetch(`/api/ΩOS/primeos/command/${encodeURIComponent(command)}`);
-        const data = await response.json();
-        log(`Command executed - PID: ${data.kernel_pid}`, 'success');
-      } catch (error) {
-        log(`Error: ${error.message}`, 'error');
-      }
-    }
+  // Register service worker
+  registerServiceWorker();
 
-    // Auto-test on load
-    setTimeout(() => {
-      testKernelStatus();
-    }, 2000);
-  </script>
+  // Initialize PrimeOS commands
+  const commandsList = document.getElementById("commands-list");
+  const commands = [
+    "deploy shard logistics",
+    "tail logs",
+    "merge checkpoints qwen-asx into mx2lm",
+    "scan plugins",
+    "list agents",
+    "run arena simulation",
+    "show hive status"
+  ];
+
+  commands.forEach(cmd => {
+    const item = document.createElement("div");
+    item.className = "command-item";
+    item.textContent = `> ${cmd}`;
+    item.onclick = () => OmegaOS.executeCommand(cmd);
+    commandsList.appendChild(item);
+  });
+
+  // Button handlers
+  const $ = (id) => document.getElementById(id);
+
+  $("btn-render-dash").onclick =
+  $("btn-render-dash-2").onclick = () => {
+    ASX.renderPacket(SCXQ2.PACKETS.DASH, "ui-root");
+  };
+
+  $("btn-render-adv").onclick = () => {
+    ASX.renderPacket(SCXQ2.PACKETS.ADV, "ui-root");
+  };
+
+  $("btn-clear-ui").onclick = () => {
+    const root = document.getElementById("ui-root");
+    if (root) root.innerHTML = "";
+    Log.line("UI cleared", "hazard");
+  };
+
+  $("btn-show-packets").onclick = () => {
+    Log.line("SCXQ2 Packets: " + Object.values(SCXQ2.PACKETS).join(", "), "hazard");
+  };
+
+  $("btn-connect-xjson").onclick = () => XJSON.connect();
+  $("btn-ping-xjson").onclick = () => XJSON.ping();
+  $("btn-resolve-dns").onclick = () => {
+    DNS.resolveAll();
+    DNS.mountTable();
+  };
+
+  $("btn-test-kernel").onclick = () => OmegaOS.getStatus();
+  $("btn-spawn-process").onclick = () => OmegaOS.spawnProcess();
+  $("btn-test-vfs").onclick = () => OmegaOS.testVFS();
+  $("btn-query-agents").onclick = () => OmegaOS.queryAgents();
+  $("btn-run-cipher").onclick = () => CipherDemo.run();
+
+  // Auto-initialize
+  Log.line("Initializing ΩOS kernel...", "info");
+  setTimeout(async () => {
+    await XJSON.connect();
+    await OmegaOS.getStatus();
+    await OmegaOS.testVFS();
+    await OmegaOS.queryAgents();
+    DNS.resolveAll();
+    DNS.mountTable();
+    Log.line("════════════════════════════════════════", "info");
+    Log.line("SYSTEM READY", "ok");
+  }, 1000);
+});
+</script>
+
 </body>
 </html>
