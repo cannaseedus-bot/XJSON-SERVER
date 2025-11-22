@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎨 ASX Design Studio - Universal Template Editor</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --asx-bg: #0a0a0a;
+      --asx-panel: #1a1a1a;
+      --asx-border: #333;
+      --asx-accent: #ff0000;
+      --asx-accent-soft: rgba(255, 0, 0, 0.2);
+      --asx-text: #e2e8f0;
+      --asx-gold: #ffd700;
+      --asx-cyan: #00bfff;
+      --asx-green: #00ff00;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--asx-bg);
+      color: var(--asx-text);
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg, #8b0000 0%, var(--asx-bg) 100%);
+      border-bottom: 3px solid var(--asx-accent);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(139, 0, 0, 0.5);
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      text-shadow: 0 0 10px var(--asx-accent);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      background: var(--asx-panel);
+      border: 2px solid var(--asx-accent);
+      color: var(--asx-text);
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+    }
+
+    .btn:hover {
+      background: #8b0000;
+      box-shadow: 0 0 15px var(--asx-accent);
+    }
+
+    .btn.primary {
+      background: var(--asx-accent);
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: #ff3333;
+      box-shadow: 0 0 20px var(--asx-accent);
+    }
+
+    /* MAIN LAYOUT */
+    .studio {
+      display: grid;
+      grid-template-columns: 250px 1fr 300px;
+      grid-template-rows: calc(100vh - 70px);
+      gap: 0;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      background: var(--asx-panel);
+      border-right: 2px solid var(--asx-border);
+      padding: 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .sidebar-section {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--asx-border);
+      border-radius: 4px;
+      padding: 1rem;
+    }
+
+    .sidebar-title {
+      color: var(--asx-gold);
+      font-weight: bold;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--asx-border);
+      padding-bottom: 0.5rem;
+    }
+
+    .tool-btn {
+      background: rgba(139, 0, 0, 0.3);
+      border: 1px solid var(--asx-accent);
+      color: var(--asx-text);
+      padding: 0.75rem;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+      width: 100%;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tool-btn:hover {
+      background: rgba(139, 0, 0, 0.6);
+      border-color: var(--asx-gold);
+    }
+
+    .tool-btn.active {
+      background: var(--asx-accent);
+      color: #fff;
+    }
+
+    /* CANVAS AREA */
+    .canvas-container {
+      background: #2a2a2a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: auto;
+    }
+
+    .canvas-wrapper {
+      background: #fff;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    }
+
+    /* PROPERTIES PANEL */
+    .properties {
+      background: var(--asx-panel);
+      border-left: 2px solid var(--asx-border);
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .prop-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .prop-label {
+      color: var(--asx-gold);
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+      display: block;
+      text-transform: uppercase;
+    }
+
+    .prop-input {
+      width: 100%;
+      padding: 0.5rem;
+      background: #000;
+      border: 1px solid var(--asx-border);
+      color: var(--asx-text);
+      font-family: 'Courier New', monospace;
+      border-radius: 2px;
+    }
+
+    .prop-input:focus {
+      outline: none;
+      border-color: var(--asx-accent);
+      box-shadow: 0 0 5px rgba(255, 0, 0, 0.3);
+    }
+
+    .color-picker-wrapper {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .color-preview {
+      width: 40px;
+      height: 40px;
+      border: 2px solid var(--asx-border);
+      cursor: pointer;
+      border-radius: 2px;
+    }
+
+    input[type="color"] {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* LAYERS PANEL */
+    .layer-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--asx-border);
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .layer-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--asx-accent);
+    }
+
+    .layer-item.active {
+      background: var(--asx-accent-soft);
+      border-color: var(--asx-accent);
+    }
+
+    .layer-name {
+      font-size: 0.85rem;
+    }
+
+    .layer-controls {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .layer-btn {
+      background: transparent;
+      border: none;
+      color: var(--asx-text);
+      cursor: pointer;
+      padding: 0.25rem;
+      font-size: 0.75rem;
+    }
+
+    .layer-btn:hover {
+      color: var(--asx-accent);
+    }
+
+    /* FILE INPUT STYLING */
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: -9999px;
+    }
+
+    .file-input-label {
+      display: block;
+      padding: 0.75rem;
+      background: rgba(139, 0, 0, 0.3);
+      border: 1px solid var(--asx-accent);
+      color: var(--asx-text);
+      text-align: center;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .file-input-label:hover {
+      background: rgba(139, 0, 0, 0.6);
+      border-color: var(--asx-gold);
+    }
+
+    /* STATUS BAR */
+    .status-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--asx-panel);
+      border-top: 2px solid var(--asx-border);
+      padding: 0.5rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      z-index: 100;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #000;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #8b0000;
+      border: 1px solid var(--asx-accent);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--asx-accent);
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <div class="header">
+    <h1>
+      <span>🎨</span>
+      <span>ASX DESIGN STUDIO</span>
+      <span style="font-size: 0.7rem; color: #999; font-weight: normal;">Universal Template Editor</span>
+    </h1>
+    <div class="header-actions">
+      <button class="btn" id="btn-new">📄 New</button>
+      <button class="btn" id="btn-load">📂 Load Template</button>
+      <button class="btn" id="btn-save">💾 Save ZIP</button>
+      <button class="btn primary" id="btn-export-xjson">⚡ Export XJSON</button>
+      <button class="btn" onclick="window.open('/omega-launcher.html', '_self')">⟁ Launcher</button>
+    </div>
+  </div>
+
+  <!-- MAIN STUDIO -->
+  <div class="studio">
+    <!-- LEFT SIDEBAR: TOOLS -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">🛠️ Tools</div>
+        <button class="tool-btn" id="tool-select">
+          <span>👆</span>
+          <span>Select</span>
+        </button>
+        <button class="tool-btn" id="tool-text">
+          <span>📝</span>
+          <span>Add Text</span>
+        </button>
+        <button class="tool-btn" id="tool-rect">
+          <span>⬜</span>
+          <span>Add Rectangle</span>
+        </button>
+        <button class="tool-btn" id="tool-circle">
+          <span>⭕</span>
+          <span>Add Circle</span>
+        </button>
+        <button class="tool-btn" id="tool-image">
+          <span>🖼️</span>
+          <span>Add Image</span>
+        </button>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">📂 Template</div>
+        <div class="file-input-wrapper">
+          <input type="file" id="template-upload" accept=".zip">
+          <label for="template-upload" class="file-input-label">
+            📤 Upload Template ZIP
+          </label>
+        </div>
+        <div class="file-input-wrapper" style="margin-top: 0.5rem;">
+          <input type="file" id="image-upload" accept="image/*">
+          <label for="image-upload" class="file-input-label">
+            🖼️ Upload Image
+          </label>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">📐 Canvas</div>
+        <div class="prop-group">
+          <label class="prop-label">Width</label>
+          <input type="number" class="prop-input" id="canvas-width" value="900">
+        </div>
+        <div class="prop-group">
+          <label class="prop-label">Height</label>
+          <input type="number" class="prop-input" id="canvas-height" value="600">
+        </div>
+        <button class="btn" id="btn-resize-canvas" style="width: 100%;">
+          ↔️ Resize Canvas
+        </button>
+      </div>
+    </div>
+
+    <!-- CENTER: CANVAS -->
+    <div class="canvas-container">
+      <div class="canvas-wrapper">
+        <canvas id="canvas" width="900" height="600"></canvas>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: PROPERTIES -->
+    <div class="properties">
+      <div class="sidebar-title">⚙️ Properties</div>
+
+      <div id="object-properties" style="display: none;">
+        <div class="prop-group">
+          <label class="prop-label">Type</label>
+          <input type="text" class="prop-input" id="prop-type" readonly>
+        </div>
+
+        <div class="prop-group" id="prop-text-group" style="display: none;">
+          <label class="prop-label">Text Content</label>
+          <input type="text" class="prop-input" id="prop-text">
+        </div>
+
+        <div class="prop-group" id="prop-font-group" style="display: none;">
+          <label class="prop-label">Font Size</label>
+          <input type="number" class="prop-input" id="prop-font-size">
+        </div>
+
+        <div class="prop-group">
+          <label class="prop-label">Fill Color</label>
+          <div class="color-picker-wrapper">
+            <div class="color-preview" id="fill-preview" onclick="document.getElementById('prop-fill').click()"></div>
+            <input type="color" id="prop-fill">
+            <input type="text" class="prop-input" id="prop-fill-text" style="flex: 1;">
+          </div>
+        </div>
+
+        <div class="prop-group">
+          <label class="prop-label">Stroke Color</label>
+          <div class="color-picker-wrapper">
+            <div class="color-preview" id="stroke-preview" onclick="document.getElementById('prop-stroke').click()"></div>
+            <input type="color" id="prop-stroke">
+            <input type="text" class="prop-input" id="prop-stroke-text" style="flex: 1;">
+          </div>
+        </div>
+
+        <div class="prop-group">
+          <label class="prop-label">Stroke Width</label>
+          <input type="number" class="prop-input" id="prop-stroke-width" min="0" step="1">
+        </div>
+
+        <div class="prop-group">
+          <label class="prop-label">Opacity</label>
+          <input type="range" class="prop-input" id="prop-opacity" min="0" max="1" step="0.01">
+        </div>
+
+        <div class="prop-group">
+          <label class="prop-label">Position X</label>
+          <input type="number" class="prop-input" id="prop-left">
+        </div>
+
+        <div class="prop-group">
+          <label class="prop-label">Position Y</label>
+          <input type="number" class="prop-input" id="prop-top">
+        </div>
+
+        <button class="btn" id="btn-delete" style="width: 100%; background: #660000;">
+          🗑️ Delete Object
+        </button>
+      </div>
+
+      <div class="sidebar-title" style="margin-top: 2rem;">📚 Layers</div>
+      <div id="layers-list"></div>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <div class="status-item">
+      <span>📍 Tape: design-studio</span>
+    </div>
+    <div class="status-item">
+      <span id="status-objects">Objects: 0</span>
+    </div>
+    <div class="status-item">
+      <span id="status-selected">Selected: None</span>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════
+    // ASX DESIGN STUDIO - MAIN SCRIPT
+    // ═══════════════════════════════════════════════════════════
+
+    // Initialize Fabric.js canvas
+    const canvas = new fabric.Canvas('canvas', {
+      backgroundColor: '#ffffff'
+    });
+
+    let selectedObject = null;
+    let currentTool = 'select';
+
+    // ═══════════════════════════════════════════════════════════
+    // TOOLS
+    // ═══════════════════════════════════════════════════════════
+
+    document.getElementById('tool-select').addEventListener('click', () => {
+      currentTool = 'select';
+      updateToolButtons();
+      canvas.isDrawingMode = false;
+    });
+
+    document.getElementById('tool-text').addEventListener('click', () => {
+      const text = new fabric.Text('Double-click to edit', {
+        left: 100,
+        top: 100,
+        fontSize: 24,
+        fill: '#000000'
+      });
+      canvas.add(text);
+      canvas.setActiveObject(text);
+      canvas.renderAll();
+      updateLayers();
+      updateStatus();
+    });
+
+    document.getElementById('tool-rect').addEventListener('click', () => {
+      const rect = new fabric.Rect({
+        left: 100,
+        top: 100,
+        width: 200,
+        height: 100,
+        fill: '#ff0000',
+        stroke: '#000000',
+        strokeWidth: 2
+      });
+      canvas.add(rect);
+      canvas.setActiveObject(rect);
+      canvas.renderAll();
+      updateLayers();
+      updateStatus();
+    });
+
+    document.getElementById('tool-circle').addEventListener('click', () => {
+      const circle = new fabric.Circle({
+        left: 100,
+        top: 100,
+        radius: 50,
+        fill: '#00ff00',
+        stroke: '#000000',
+        strokeWidth: 2
+      });
+      canvas.add(circle);
+      canvas.setActiveObject(circle);
+      canvas.renderAll();
+      updateLayers();
+      updateStatus();
+    });
+
+    document.getElementById('image-upload').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        fabric.Image.fromURL(event.target.result, (img) => {
+          img.set({
+            left: 100,
+            top: 100,
+            scaleX: 0.5,
+            scaleY: 0.5
+          });
+          canvas.add(img);
+          canvas.setActiveObject(img);
+          canvas.renderAll();
+          updateLayers();
+          updateStatus();
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function updateToolButtons() {
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      if (currentTool === 'select') {
+        document.getElementById('tool-select').classList.add('active');
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // CANVAS EVENTS
+    // ═══════════════════════════════════════════════════════════
+
+    canvas.on('selection:created', updateControls);
+    canvas.on('selection:updated', updateControls);
+    canvas.on('selection:cleared', () => {
+      selectedObject = null;
+      document.getElementById('object-properties').style.display = 'none';
+      updateStatus();
+      updateLayers();
+    });
+
+    canvas.on('object:modified', () => {
+      updateControls();
+      updateLayers();
+    });
+
+    function updateControls(e) {
+      if (e && e.selected) {
+        selectedObject = e.selected[0];
+      } else if (e && e.target) {
+        selectedObject = e.target;
+      }
+
+      if (!selectedObject) return;
+
+      document.getElementById('object-properties').style.display = 'block';
+      document.getElementById('prop-type').value = selectedObject.type;
+
+      // Text properties
+      if (selectedObject.type === 'text' || selectedObject.type === 'i-text') {
+        document.getElementById('prop-text-group').style.display = 'block';
+        document.getElementById('prop-font-group').style.display = 'block';
+        document.getElementById('prop-text').value = selectedObject.text || '';
+        document.getElementById('prop-font-size').value = selectedObject.fontSize || 20;
+      } else {
+        document.getElementById('prop-text-group').style.display = 'none';
+        document.getElementById('prop-font-group').style.display = 'none';
+      }
+
+      // Common properties
+      document.getElementById('prop-fill').value = selectedObject.fill || '#000000';
+      document.getElementById('prop-fill-text').value = selectedObject.fill || '#000000';
+      document.getElementById('fill-preview').style.backgroundColor = selectedObject.fill || '#000000';
+
+      document.getElementById('prop-stroke').value = selectedObject.stroke || '#000000';
+      document.getElementById('prop-stroke-text').value = selectedObject.stroke || '#000000';
+      document.getElementById('stroke-preview').style.backgroundColor = selectedObject.stroke || '#000000';
+
+      document.getElementById('prop-stroke-width').value = selectedObject.strokeWidth || 0;
+      document.getElementById('prop-opacity').value = selectedObject.opacity || 1;
+      document.getElementById('prop-left').value = Math.round(selectedObject.left || 0);
+      document.getElementById('prop-top').value = Math.round(selectedObject.top || 0);
+
+      updateStatus();
+      updateLayers();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PROPERTY INPUTS
+    // ═══════════════════════════════════════════════════════════
+
+    document.getElementById('prop-text').addEventListener('input', (e) => {
+      if (selectedObject && (selectedObject.type === 'text' || selectedObject.type === 'i-text')) {
+        selectedObject.set('text', e.target.value);
+        canvas.renderAll();
+      }
+    });
+
+    document.getElementById('prop-font-size').addEventListener('input', (e) => {
+      if (selectedObject && (selectedObject.type === 'text' || selectedObject.type === 'i-text')) {
+        selectedObject.set('fontSize', parseInt(e.target.value));
+        canvas.renderAll();
+      }
+    });
+
+    document.getElementById('prop-fill').addEventListener('input', (e) => {
+      if (selectedObject) {
+        selectedObject.set('fill', e.target.value);
+        document.getElementById('prop-fill-text').value = e.target.value;
+        document.getElementById('fill-preview').style.backgroundColor = e.target.value;
+        canvas.renderAll();
+      }
+    });
+
+    document.getElementById('prop-stroke').addEventListener('input', (e) => {
+      if (selectedObject) {
+        selectedObject.set('stroke', e.target.value);
+        document.getElementById('prop-stroke-text').value = e.target.value;
+        document.getElementById('stroke-preview').style.backgroundColor = e.target.value;
+        canvas.renderAll();
+      }
+    });
+
+    document.getElementById('prop-stroke-width').addEventListener('input', (e) => {
+      if (selectedObject) {
+        selectedObject.set('strokeWidth', parseInt(e.target.value));
+        canvas.renderAll();
+      }
+    });
+
+    document.getElementById('prop-opacity').addEventListener('input', (e) => {
+      if (selectedObject) {
+        selectedObject.set('opacity', parseFloat(e.target.value));
+        canvas.renderAll();
+      }
+    });
+
+    document.getElementById('prop-left').addEventListener('input', (e) => {
+      if (selectedObject) {
+        selectedObject.set('left', parseInt(e.target.value));
+        canvas.renderAll();
+      }
+    });
+
+    document.getElementById('prop-top').addEventListener('input', (e) => {
+      if (selectedObject) {
+        selectedObject.set('top', parseInt(e.target.value));
+        canvas.renderAll();
+      }
+    });
+
+    document.getElementById('btn-delete').addEventListener('click', () => {
+      if (selectedObject) {
+        canvas.remove(selectedObject);
+        selectedObject = null;
+        document.getElementById('object-properties').style.display = 'none';
+        canvas.renderAll();
+        updateLayers();
+        updateStatus();
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // LAYERS PANEL
+    // ═══════════════════════════════════════════════════════════
+
+    function updateLayers() {
+      const layersList = document.getElementById('layers-list');
+      layersList.innerHTML = '';
+
+      const objects = canvas.getObjects();
+      objects.forEach((obj, index) => {
+        const layerItem = document.createElement('div');
+        layerItem.className = 'layer-item';
+        if (selectedObject === obj) {
+          layerItem.classList.add('active');
+        }
+
+        const layerName = document.createElement('span');
+        layerName.className = 'layer-name';
+        layerName.textContent = `${obj.type} #${index + 1}`;
+
+        const layerControls = document.createElement('div');
+        layerControls.className = 'layer-controls';
+
+        const btnUp = document.createElement('button');
+        btnUp.className = 'layer-btn';
+        btnUp.textContent = '▲';
+        btnUp.onclick = (e) => {
+          e.stopPropagation();
+          canvas.bringForward(obj);
+          canvas.renderAll();
+          updateLayers();
+        };
+
+        const btnDown = document.createElement('button');
+        btnDown.className = 'layer-btn';
+        btnDown.textContent = '▼';
+        btnDown.onclick = (e) => {
+          e.stopPropagation();
+          canvas.sendBackwards(obj);
+          canvas.renderAll();
+          updateLayers();
+        };
+
+        layerControls.appendChild(btnUp);
+        layerControls.appendChild(btnDown);
+
+        layerItem.appendChild(layerName);
+        layerItem.appendChild(layerControls);
+
+        layerItem.onclick = () => {
+          canvas.setActiveObject(obj);
+          canvas.renderAll();
+        };
+
+        layersList.appendChild(layerItem);
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // STATUS BAR
+    // ═══════════════════════════════════════════════════════════
+
+    function updateStatus() {
+      const objectCount = canvas.getObjects().length;
+      document.getElementById('status-objects').textContent = `Objects: ${objectCount}`;
+
+      if (selectedObject) {
+        document.getElementById('status-selected').textContent = `Selected: ${selectedObject.type}`;
+      } else {
+        document.getElementById('status-selected').textContent = 'Selected: None';
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // FILE OPERATIONS
+    // ═══════════════════════════════════════════════════════════
+
+    // New document
+    document.getElementById('btn-new').addEventListener('click', () => {
+      if (confirm('Clear canvas and start new document?')) {
+        canvas.clear();
+        canvas.backgroundColor = '#ffffff';
+        canvas.renderAll();
+        updateLayers();
+        updateStatus();
+      }
+    });
+
+    // Load template ZIP
+    document.getElementById('btn-load').addEventListener('click', () => {
+      document.getElementById('template-upload').click();
+    });
+
+    document.getElementById('template-upload').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const zip = await JSZip.loadAsync(file);
+      const manifestFile = zip.file('manifest.json');
+      if (!manifestFile) {
+        alert('manifest.json not found in zip!');
+        return;
+      }
+
+      const manifest = JSON.parse(await manifestFile.async('string'));
+      canvas.clear();
+      canvas.backgroundColor = manifest.backgroundColor || '#ffffff';
+
+      for (const obj of manifest.objects) {
+        if (obj.type === 'text') {
+          const text = new fabric.Text(obj.content, {
+            left: obj.left || 100,
+            top: obj.top || 100,
+            fontSize: obj.fontSize || 24,
+            fill: obj.fill || '#000000',
+            stroke: obj.stroke,
+            strokeWidth: obj.strokeWidth || 0
+          });
+          canvas.add(text);
+        }
+        if (obj.type === 'rect') {
+          const rect = new fabric.Rect({
+            left: obj.left || 100,
+            top: obj.top || 100,
+            width: obj.width || 100,
+            height: obj.height || 100,
+            fill: obj.fill || '#ff0000',
+            stroke: obj.stroke || '#000000',
+            strokeWidth: obj.strokeWidth || 2
+          });
+          canvas.add(rect);
+        }
+        if (obj.type === 'circle') {
+          const circle = new fabric.Circle({
+            left: obj.left || 100,
+            top: obj.top || 100,
+            radius: obj.radius || 50,
+            fill: obj.fill || '#00ff00',
+            stroke: obj.stroke || '#000000',
+            strokeWidth: obj.strokeWidth || 2
+          });
+          canvas.add(circle);
+        }
+        if (obj.type === 'image' && obj.src) {
+          const imgFile = zip.file(obj.src);
+          if (imgFile) {
+            const imgBlob = await imgFile.async('blob');
+            const imgUrl = URL.createObjectURL(imgBlob);
+            fabric.Image.fromURL(imgUrl, (img) => {
+              img.set({
+                left: obj.left || 50,
+                top: obj.top || 50,
+                scaleX: obj.scaleX || 1,
+                scaleY: obj.scaleY || 1
+              });
+              canvas.add(img);
+              canvas.renderAll();
+              updateLayers();
+              updateStatus();
+            });
+          }
+        }
+      }
+      canvas.renderAll();
+      updateLayers();
+      updateStatus();
+    });
+
+    // Save as ZIP
+    document.getElementById('btn-save').addEventListener('click', async () => {
+      const zip = new JSZip();
+      const manifest = {
+        version: '1.0',
+        backgroundColor: canvas.backgroundColor,
+        objects: []
+      };
+
+      const objects = canvas.getObjects();
+      let imageCounter = 0;
+
+      for (const obj of objects) {
+        if (obj.type === 'text' || obj.type === 'i-text') {
+          manifest.objects.push({
+            type: 'text',
+            content: obj.text,
+            left: obj.left,
+            top: obj.top,
+            fontSize: obj.fontSize,
+            fill: obj.fill,
+            stroke: obj.stroke,
+            strokeWidth: obj.strokeWidth
+          });
+        } else if (obj.type === 'rect') {
+          manifest.objects.push({
+            type: 'rect',
+            left: obj.left,
+            top: obj.top,
+            width: obj.width,
+            height: obj.height,
+            fill: obj.fill,
+            stroke: obj.stroke,
+            strokeWidth: obj.strokeWidth
+          });
+        } else if (obj.type === 'circle') {
+          manifest.objects.push({
+            type: 'circle',
+            left: obj.left,
+            top: obj.top,
+            radius: obj.radius,
+            fill: obj.fill,
+            stroke: obj.stroke,
+            strokeWidth: obj.strokeWidth
+          });
+        } else if (obj.type === 'image' && obj._element) {
+          const filename = `image-${++imageCounter}.png`;
+          const dataUrl = obj.toDataURL({ format: 'png' });
+          const base64Data = dataUrl.split(',')[1];
+          zip.file(filename, base64Data, { base64: true });
+
+          manifest.objects.push({
+            type: 'image',
+            src: filename,
+            left: obj.left,
+            top: obj.top,
+            scaleX: obj.scaleX,
+            scaleY: obj.scaleY
+          });
+        }
+      }
+
+      zip.file('manifest.json', JSON.stringify(manifest, null, 2));
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'asx-template.zip';
+      link.click();
+    });
+
+    // Export to XJSON
+    document.getElementById('btn-export-xjson').addEventListener('click', () => {
+      const xjson = {
+        xjson: '1.0',
+        title: 'ASX Design Template',
+        canvas: {
+          width: canvas.width,
+          height: canvas.height,
+          backgroundColor: canvas.backgroundColor
+        },
+        blocks: []
+      };
+
+      const objects = canvas.getObjects();
+      objects.forEach((obj, index) => {
+        const block = {
+          id: `block_${index + 1}`,
+          type: obj.type,
+          props: {
+            left: obj.left,
+            top: obj.top,
+            opacity: obj.opacity
+          }
+        };
+
+        if (obj.type === 'text' || obj.type === 'i-text') {
+          block.props.text = obj.text;
+          block.props.fontSize = obj.fontSize;
+          block.props.fill = obj.fill;
+        } else if (obj.type === 'rect') {
+          block.props.width = obj.width;
+          block.props.height = obj.height;
+          block.props.fill = obj.fill;
+          block.props.stroke = obj.stroke;
+          block.props.strokeWidth = obj.strokeWidth;
+        } else if (obj.type === 'circle') {
+          block.props.radius = obj.radius;
+          block.props.fill = obj.fill;
+          block.props.stroke = obj.stroke;
+          block.props.strokeWidth = obj.strokeWidth;
+        }
+
+        xjson.blocks.push(block);
+      });
+
+      const blob = new Blob([JSON.stringify(xjson, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'template.xjson';
+      link.click();
+    });
+
+    // Canvas resize
+    document.getElementById('btn-resize-canvas').addEventListener('click', () => {
+      const width = parseInt(document.getElementById('canvas-width').value);
+      const height = parseInt(document.getElementById('canvas-height').value);
+
+      canvas.setWidth(width);
+      canvas.setHeight(height);
+      canvas.renderAll();
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // ΩOS TAPE SELF-REGISTRATION
+    // ═══════════════════════════════════════════════════════════
+
+    (function(){
+      const TAPE_ID = 'design-studio';
+
+      fetch('/api/hive/heartbeat?tape=' + encodeURIComponent(TAPE_ID))
+        .then(r => r.json())
+        .then(data => {
+          console.log('[KLH HIVE] ✓ Design Studio registered:', data);
+        })
+        .catch(err => {
+          console.warn('[KLH HIVE] ⚠ Heartbeat failed:', err);
+        });
+
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'TAPE_HEARTBEAT',
+          tape: TAPE_ID,
+          url: location.href,
+          time: Date.now(),
+          metadata: {
+            title: 'ASX Design Studio',
+            type: 'design-tool',
+            engine: 'Fabric.js 5.3.0',
+            exports: ['ZIP', 'XJSON']
+          }
+        });
+      }
+
+      console.log('%c🎨 ASX DESIGN STUDIO READY 🎨', 'color: #ff0000; font-size: 16px; font-weight: bold;');
+      console.log('Features:');
+      console.log('  - Visual template editor (Fabric.js)');
+      console.log('  - Export to ZIP or XJSON');
+      console.log('  - Layer management');
+      console.log('  - Color picker');
+      console.log('  - ΩOS integration');
+    })();
+
+    // Initialize
+    updateToolButtons();
+    updateLayers();
+    updateStatus();
+  </script>
+</body>
+</html>

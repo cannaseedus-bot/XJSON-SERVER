@@ -363,11 +363,11 @@
       <!-- STATS -->
       <div class="stats-bar">
         <div class="stat">
-          <span class="stat-value" id="stat-tapes">7</span>
+          <span class="stat-value" id="stat-tapes">8</span>
           <span class="stat-label">Loaded Tapes</span>
         </div>
         <div class="stat">
-          <span class="stat-value" id="stat-studios">5</span>
+          <span class="stat-value" id="stat-studios">6</span>
           <span class="stat-label">Active Studios</span>
         </div>
         <div class="stat">
@@ -495,6 +495,31 @@
             </div>
             <div class="tape-actions">
               <a href="./prime-settings.html" class="btn">▶️ CONFIGURE</a>
+            </div>
+          </div>
+
+          <!-- DESIGN STUDIO -->
+          <div class="tape-card">
+            <div class="status-badge">LIVE</div>
+            <div class="tape-header">
+              <div class="tape-icon">🎨</div>
+              <div class="tape-info">
+                <div class="tape-title">ASX DESIGN STUDIO</div>
+                <div class="tape-subtitle">Visual Template Editor</div>
+              </div>
+            </div>
+            <div class="tape-description">
+              WYSIWYG template editor powered by Fabric.js.
+              Create game assets, UI layouts, and designs. Export to ZIP or XJSON format.
+            </div>
+            <div class="tape-features">
+              <span class="feature-tag">Fabric.js</span>
+              <span class="feature-tag">WYSIWYG</span>
+              <span class="feature-tag">Layers</span>
+              <span class="feature-tag">XJSON Export</span>
+            </div>
+            <div class="tape-actions">
+              <a href="./design-studio.html" class="btn">▶️ DESIGN</a>
             </div>
           </div>
         </div>
@@ -650,6 +675,7 @@
       console.log('  ☣️ SCXQ2 ATOMIC - SCX cipher dashboard');
       console.log('  ⚡ TYSON-CHOMSKY - AI reasoning engine');
       console.log('  🔐 PRIME SETTINGS - Secure API management');
+      console.log('  🎨 DESIGN STUDIO - Visual template editor');
       console.log('  ⟁ ΩOS TRINITY - Service Worker kernel');
       console.log('  🌐 KLH HIVE - Mesh networking');
       console.log('  📦 ASX-VM - Standalone virtual machine');
@@ -720,8 +746,8 @@
     }
 
     window.addEventListener('load', () => {
-      animateValue('stat-tapes', 0, 7, 1000);
-      animateValue('stat-studios', 0, 5, 1200);
+      animateValue('stat-tapes', 0, 8, 1000);
+      animateValue('stat-studios', 0, 6, 1200);
     });
   </script>
 </body>
