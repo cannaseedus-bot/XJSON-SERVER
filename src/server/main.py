@@ -19,6 +19,11 @@ import uvicorn
 # Import SCX and K'UHUL modules
 from scx_compression import SCXCompressor, SCXBenchmark, CompressionResult
 from kuhul_executor import KuhulExecutor, ExecutionResult, EXAMPLE_PROGRAMS
+from klh_hive import (
+    KLHHiveMesh, MMORPGGridPortal, ShardDefinition,
+    VirtualShardServer, DistributedHashTable, TorrentNodeManager,
+    boot_hive, MMORPG_SHARD_CONFIG
+)
 
 # ============================================================================
 # MODELS
@@ -47,6 +52,37 @@ class SCXCompressRequest(BaseModel):
 class KuhulExecuteRequest(BaseModel):
     code: str
     functions: Optional[Dict[str, str]] = None
+
+class KLHBootRequest(BaseModel):
+    hive_id: str
+    config: Optional[Dict[str, Any]] = None
+
+class KLHRouteRequest(BaseModel):
+    target_url: str
+    method: str = "GET"
+    data: Optional[Dict[str, Any]] = None
+
+class KLHPlayerRegisterRequest(BaseModel):
+    player_id: str
+    player_data: Dict[str, Any]
+
+class KLHEntitySpawnRequest(BaseModel):
+    entity_type: str
+    position: Dict[str, float]
+
+class TorrentNodeJoinRequest(BaseModel):
+    player_id: str
+    game_id: str
+    node_capabilities: Optional[Dict[str, Any]] = None
+
+class TorrentChunkRequest(BaseModel):
+    chunk_data: str  # Base64 encoded
+    game_id: str
+
+class SWPushNotificationRequest(BaseModel):
+    subscription: Dict[str, Any]
+    message: str
+    data: Optional[Dict[str, Any]] = None
 
 # ============================================================================
 # ΩOS KERNEL PROCESS MANAGER
@@ -280,6 +316,12 @@ cognitive = CognitiveProcessor()
 dns_resolver = XJSONDNSResolver()
 scx_compressor = SCXCompressor()
 kuhul_executor = KuhulExecutor()
+
+# Initialize KLH Hive components
+klh_hive: Optional[KLHHiveMesh] = None
+klh_portal: Optional[MMORPGGridPortal] = None
+dht = DistributedHashTable()
+torrent_manager = TorrentNodeManager(dht)
 
 # Create FastAPI app
 app = FastAPI(
@@ -619,6 +661,231 @@ async def kuhul_glyphs():
     }
 
 # ============================================================================
+# KLH HIVE MESH API ENDPOINTS
+# ============================================================================
+
+@app.post("/api/klh/boot")
+async def klh_boot(req: KLHBootRequest):
+    """Boot a new KLH Hive"""
+    global klh_hive, klh_portal
+
+    # Boot the hive
+    klh_hive = boot_hive(req.hive_id)
+
+    # Register shards from config
+    config = req.config or MMORPG_SHARD_CONFIG
+    klh_hive.register_shards(config)
+
+    # Create MMORPG portal
+    klh_portal = MMORPGGridPortal(req.hive_id, klh_hive)
+
+    return {
+        "success": True,
+        "hive_id": req.hive_id,
+        "shards": len(klh_hive.shards),
+        "message": "KLH Hive booted successfully"
+    }
+
+@app.get("/api/klh/status")
+async def klh_status():
+    """Get KLH Hive status"""
+    if klh_hive is None:
+        raise HTTPException(status_code=404, detail="Hive not booted. Use POST /api/klh/boot first")
+
+    stats = klh_hive.get_mesh_stats()
+    return {
+        "hive": stats,
+        "portal": klh_portal.get_portal_state() if klh_portal else None,
+        "torrent": torrent_manager.get_node_stats()
+    }
+
+@app.post("/api/klh/route")
+async def klh_route(req: KLHRouteRequest):
+    """Route request through virtual mesh"""
+    if klh_hive is None:
+        raise HTTPException(status_code=404, detail="Hive not booted")
+
+    result = await klh_hive.route_request(req.target_url, req.method, req.data)
+    return result
+
+@app.get("/api/klh/shards")
+async def klh_shards():
+    """Get all registered shards"""
+    if klh_hive is None:
+        raise HTTPException(status_code=404, detail="Hive not booted")
+
+    return {
+        "shards": {
+            shard_id: {
+                "id": server.shard.id,
+                "port": server.shard.port,
+                "runtime": server.shard.runtime,
+                "stats": server.get_stats()
+            }
+            for shard_id, server in klh_hive.shards.items()
+        },
+        "total": len(klh_hive.shards)
+    }
+
+@app.post("/api/klh/cross-shard")
+async def klh_cross_shard(from_shard: str, to_url: str, method: str = "GET", data: Optional[Dict] = None):
+    """Execute cross-shard communication"""
+    if klh_hive is None:
+        raise HTTPException(status_code=404, detail="Hive not booted")
+
+    result = await klh_hive.cross_shard_communication(from_shard, to_url, method, data or {})
+    return result
+
+# ============================================================================
+# MMORPG PORTAL API ENDPOINTS
+# ============================================================================
+
+@app.post("/api/klh/portal/register-player")
+async def klh_portal_register_player(req: KLHPlayerRegisterRequest):
+    """Register player to MMORPG portal"""
+    if klh_portal is None:
+        raise HTTPException(status_code=404, detail="Portal not initialized")
+
+    result = klh_portal.register_player(req.player_id, req.player_data)
+    return result
+
+@app.post("/api/klh/portal/spawn-entity")
+async def klh_portal_spawn_entity(req: KLHEntitySpawnRequest):
+    """Spawn entity in MMORPG world"""
+    if klh_portal is None:
+        raise HTTPException(status_code=404, detail="Portal not initialized")
+
+    entity_id = klh_portal.spawn_entity(req.entity_type, req.position)
+    return {
+        "success": True,
+        "entity_id": entity_id,
+        "entity_type": req.entity_type,
+        "position": req.position
+    }
+
+@app.get("/api/klh/portal/state")
+async def klh_portal_state():
+    """Get MMORPG portal state"""
+    if klh_portal is None:
+        raise HTTPException(status_code=404, detail="Portal not initialized")
+
+    return klh_portal.get_portal_state()
+
+@app.post("/api/klh/portal/sync")
+async def klh_portal_sync():
+    """Synchronize portal with grid"""
+    if klh_portal is None:
+        raise HTTPException(status_code=404, detail="Portal not initialized")
+
+    result = await klh_portal.sync_with_grid()
+    return result
+
+# ============================================================================
+# TORRENT NODE API ENDPOINTS - Players become torrent nodes
+# ============================================================================
+
+@app.post("/api/klh/torrent/join")
+async def torrent_join_game(req: TorrentNodeJoinRequest):
+    """Player joins game and becomes a torrent node"""
+    result = torrent_manager.join_game_as_node(
+        req.player_id,
+        req.game_id,
+        req.node_capabilities
+    )
+    return result
+
+@app.post("/api/klh/torrent/chunk/store")
+async def torrent_store_chunk(req: TorrentChunkRequest):
+    """Store game data chunk in DHT"""
+    import base64
+
+    # Decode base64 chunk
+    chunk_bytes = base64.b64decode(req.chunk_data)
+
+    # Store in DHT
+    chunk_hash = dht.store_chunk(chunk_bytes)
+
+    return {
+        "success": True,
+        "chunk_hash": chunk_hash,
+        "chunk_size": len(chunk_bytes),
+        "game_id": req.game_id
+    }
+
+@app.get("/api/klh/torrent/chunk/{chunk_hash}")
+async def torrent_get_chunk(chunk_hash: str):
+    """Retrieve chunk from DHT"""
+    import base64
+
+    chunk = dht.get_chunk(chunk_hash)
+    if chunk is None:
+        raise HTTPException(status_code=404, detail=f"Chunk not found: {chunk_hash}")
+
+    # Encode to base64
+    chunk_b64 = base64.b64encode(chunk).decode('ascii')
+
+    # Find nodes that have this chunk
+    nodes = torrent_manager.find_nodes_with_chunk(chunk_hash)
+
+    return {
+        "chunk_hash": chunk_hash,
+        "chunk_data": chunk_b64,
+        "chunk_size": len(chunk),
+        "available_on_nodes": len(nodes),
+        "nodes": [node["player_id"] for node in nodes]
+    }
+
+@app.get("/api/klh/torrent/game/{game_id}/nodes")
+async def torrent_game_nodes(game_id: str):
+    """Get all torrent nodes in a game"""
+    nodes = torrent_manager.get_game_nodes(game_id)
+    return {
+        "game_id": game_id,
+        "nodes": nodes,
+        "total_nodes": len(nodes)
+    }
+
+@app.get("/api/klh/torrent/stats")
+async def torrent_stats():
+    """Get torrent network statistics"""
+    return torrent_manager.get_node_stats()
+
+# ============================================================================
+# SERVICE WORKER PUSH NOTIFICATIONS - Torrent updates
+# ============================================================================
+
+@app.post("/api/klh/sw/register")
+async def sw_register_subscription(player_id: str, subscription: Dict):
+    """Register Service Worker push subscription for torrent updates"""
+    torrent_manager.register_sw_subscription(player_id, subscription)
+    return {
+        "success": True,
+        "player_id": player_id,
+        "message": "Service Worker subscription registered"
+    }
+
+@app.post("/api/klh/sw/notify")
+async def sw_send_notification(req: SWPushNotificationRequest):
+    """Send push notification to Service Worker (torrent update)"""
+    # In production, this would use Web Push API
+    # For now, we simulate the notification
+    return {
+        "success": True,
+        "message": req.message,
+        "data": req.data,
+        "timestamp": datetime.utcnow().isoformat(),
+        "note": "In production, this would trigger actual SW push notification"
+    }
+
+@app.get("/api/klh/sw/subscriptions")
+async def sw_get_subscriptions():
+    """Get all registered SW subscriptions"""
+    return {
+        "subscriptions": torrent_manager.sw_subscriptions,
+        "total": len(torrent_manager.sw_subscriptions)
+    }
+
+# ============================================================================
 # HEALTH & INFO ENDPOINTS
 # ============================================================================
 
@@ -652,7 +919,7 @@ def main():
     """Run the FastAPI server"""
     print("╔════════════════════════════════════════════════════════════╗")
     print("║  ΩOS TRINITY KERNEL - XJSON SERVER (FastAPI)             ║")
-    print("║  K'UHUL ASX Framework v2.1 + SCX Compression              ║")
+    print("║  K'UHUL ASX Framework v2.1 + KLH HIVE MESH               ║")
     print("╚════════════════════════════════════════════════════════════╝")
     print("")
     print("🚀 Server starting on http://localhost:7777")
@@ -660,15 +927,29 @@ def main():
     print("🔌 XJSON REST API: http://localhost:7777/xjson/")
     print("🗜️  SCX Compression: http://localhost:7777/api/scx/")
     print("⟁  K'UHUL Executor: http://localhost:7777/api/kuhul/")
+    print("🌐 KLH Hive Mesh: http://localhost:7777/api/klh/")
+    print("🎮 MMORPG Portal: http://localhost:7777/api/klh/portal/")
+    print("📦 Torrent Network: http://localhost:7777/api/klh/torrent/")
+    print("🔔 SW Push Notifications: http://localhost:7777/api/klh/sw/")
+    print("")
     print("🧠 PrimeOS Cognitive Shell: Active")
     print("📂 Virtual File System: Mounted")
     print("🌐 Static DNS Resolver: Ready")
+    print("⚡ Distributed Hash Table: Ready")
+    print("🎯 Torrent Node Manager: Ready")
     print("")
     print("💡 Try these endpoints:")
+    print("   POST /api/klh/boot - Boot KLH Hive")
+    print("   GET  /api/klh/status - Hive + Torrent stats")
+    print("   POST /api/klh/torrent/join - Join game as torrent node")
     print("   GET  /api/scx/benchmark/react-vs-kuhul")
-    print("   GET  /api/kuhul/glyphs")
-    print("   POST /api/scx/compress")
-    print("   POST /api/kuhul/execute")
+    print("   POST /api/kuhul/execute - Execute K'UHUL code")
+    print("")
+    print("🎮 MMORPG FEATURES:")
+    print("   • Each player's server is an MMO portal")
+    print("   • Players become torrent nodes when joining games")
+    print("   • SW push notifications deliver torrent updates")
+    print("   • Virtual mesh networking for cross-shard communication")
     print("")
     print("Press Ctrl+C to stop the server")
     print("")
