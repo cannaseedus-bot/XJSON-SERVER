@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>⟁ ΩOS TAPE LAUNCHER - XJSON Universal Platform</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --omega-bg: #0a0a0a;
+      --omega-panel: #1a1a1a;
+      --omega-border: #333;
+      --omega-primary: #8b0000;
+      --omega-accent: #ff0000;
+      --omega-text: #e2e8f0;
+      --omega-gold: #ffd700;
+      --omega-cyan: #00bfff;
+      --omega-green: #00ff00;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--omega-bg);
+      color: var(--omega-text);
+      font-family: 'Courier New', monospace;
+      overflow-x: hidden;
+    }
+
+    /* ANIMATED BACKGROUND */
+    .bg-stars {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(2px 2px at 20% 30%, white, transparent),
+        radial-gradient(2px 2px at 60% 70%, white, transparent),
+        radial-gradient(1px 1px at 50% 50%, white, transparent),
+        radial-gradient(1px 1px at 80% 10%, white, transparent),
+        radial-gradient(2px 2px at 90% 60%, white, transparent),
+        radial-gradient(1px 1px at 33% 80%, white, transparent);
+      background-size: 200% 200%;
+      animation: stars 60s linear infinite;
+      opacity: 0.3;
+      z-index: 0;
+    }
+
+    @keyframes stars {
+      from { background-position: 0 0; }
+      to { background-position: 200% 200%; }
+    }
+
+    /* LAYOUT */
+    .launcher {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg, var(--omega-primary) 0%, var(--omega-bg) 100%);
+      border-bottom: 3px solid var(--omega-accent);
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 0 4px 30px rgba(139, 0, 0, 0.5);
+    }
+
+    .header h1 {
+      font-size: 3rem;
+      text-shadow: 0 0 20px var(--omega-accent), 0 0 40px var(--omega-accent);
+      margin-bottom: 0.5rem;
+      animation: glow-pulse 3s infinite;
+    }
+
+    @keyframes glow-pulse {
+      0%, 100% { text-shadow: 0 0 20px var(--omega-accent), 0 0 40px var(--omega-accent); }
+      50% { text-shadow: 0 0 30px var(--omega-accent), 0 0 60px var(--omega-accent), 0 0 80px var(--omega-gold); }
+    }
+
+    .header .tagline {
+      font-size: 1.2rem;
+      color: var(--omega-gold);
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    .header .version {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #999;
+    }
+
+    /* MAIN CONTENT */
+    .content {
+      flex: 1;
+      padding: 3rem 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .section {
+      margin-bottom: 3rem;
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      color: var(--omega-gold);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--omega-border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* TAPE GRID */
+    .tape-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .tape-card {
+      background: var(--omega-panel);
+      border: 2px solid var(--omega-border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: all 0.3s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tape-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--omega-accent), var(--omega-gold));
+      transform: scaleX(0);
+      transition: transform 0.3s;
+    }
+
+    .tape-card:hover {
+      border-color: var(--omega-accent);
+      box-shadow: 0 0 30px rgba(139, 0, 0, 0.5);
+      transform: translateY(-5px);
+    }
+
+    .tape-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .tape-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .tape-icon {
+      font-size: 3rem;
+      filter: drop-shadow(0 0 10px currentColor);
+    }
+
+    .tape-info {
+      flex: 1;
+    }
+
+    .tape-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+    }
+
+    .tape-subtitle {
+      font-size: 0.85rem;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .tape-description {
+      color: #ccc;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .tape-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-tag {
+      background: rgba(139, 0, 0, 0.3);
+      border: 1px solid var(--omega-accent);
+      padding: 0.25rem 0.75rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tape-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      flex: 1;
+      background: var(--omega-primary);
+      border: 2px solid var(--omega-accent);
+      color: var(--omega-text);
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn:hover {
+      background: var(--omega-accent);
+      box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+    }
+
+    .btn.secondary {
+      background: transparent;
+      border-color: var(--omega-border);
+    }
+
+    .btn.secondary:hover {
+      border-color: var(--omega-accent);
+      background: rgba(139, 0, 0, 0.2);
+    }
+
+    /* STATUS INDICATOR */
+    .status-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: var(--omega-green);
+      color: #000;
+      padding: 0.25rem 0.75rem;
+      border-radius: 3px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      animation: pulse-badge 2s infinite;
+    }
+
+    @keyframes pulse-badge {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .status-badge.new {
+      background: var(--omega-gold);
+    }
+
+    .status-badge.dev {
+      background: var(--omega-cyan);
+    }
+
+    /* FOOTER */
+    .footer {
+      background: var(--omega-panel);
+      border-top: 2px solid var(--omega-border);
+      padding: 2rem;
+      text-align: center;
+      color: #999;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-link {
+      color: var(--omega-accent);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-link:hover {
+      color: var(--omega-gold);
+    }
+
+    /* STATS BAR */
+    .stats-bar {
+      background: rgba(26, 26, 26, 0.8);
+      border: 1px solid var(--omega-border);
+      border-radius: 8px;
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--omega-accent);
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .tape-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-bar {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-stars"></div>
+
+  <div class="launcher">
+    <!-- HEADER -->
+    <div class="header">
+      <h1>⟁ ΩOS TAPE LAUNCHER ⟁</h1>
+      <div class="tagline">"Any kid can build a dynasty"</div>
+      <div class="version">XJSON Universal Platform • Trinity Kernel v1.0 • KLH Hive Mesh</div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- STATS -->
+      <div class="stats-bar">
+        <div class="stat">
+          <span class="stat-value" id="stat-tapes">7</span>
+          <span class="stat-label">Loaded Tapes</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="stat-studios">5</span>
+          <span class="stat-label">Active Studios</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="stat-kernel">ONLINE</span>
+          <span class="stat-label">ΩOS Kernel</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="stat-hive">MESH</span>
+          <span class="stat-label">KLH Hive</span>
+        </div>
+      </div>
+
+      <!-- GAMES & WORLDS -->
+      <div class="section">
+        <h2 class="section-title">
+          <span>🎮</span>
+          <span>Games & Worlds</span>
+        </h2>
+        <div class="tape-grid">
+          <!-- DOOM WORLD -->
+          <div class="tape-card">
+            <div class="status-badge">LIVE</div>
+            <div class="tape-header">
+              <div class="tape-icon">🔥</div>
+              <div class="tape-info">
+                <div class="tape-title">ASX DOOM WORLD</div>
+                <div class="tape-subtitle">3D FPS Game Engine</div>
+              </div>
+            </div>
+            <div class="tape-description">
+              Complete DOOM-style FPS with visual level editor, AI NPCs (Ollama),
+              multiplayer (Zandronum + WebSocket), and construction kit. Pure JSON + Three.js.
+            </div>
+            <div class="tape-features">
+              <span class="feature-tag">Three.js</span>
+              <span class="feature-tag">FPS Controller</span>
+              <span class="feature-tag">AI NPCs</span>
+              <span class="feature-tag">Multiplayer</span>
+              <span class="feature-tag">Level Editor</span>
+            </div>
+            <div class="tape-actions">
+              <a href="./doom-world/index.html" class="btn">▶️ PLAY</a>
+              <a href="./doom-world/DASHBOARD-STUDIO.html" class="btn secondary">🛠️ BUILD</a>
+            </div>
+          </div>
+
+          <!-- SCXQ2 ATOMIC -->
+          <div class="tape-card">
+            <div class="status-badge">LIVE</div>
+            <div class="tape-header">
+              <div class="tape-icon">☣️</div>
+              <div class="tape-info">
+                <div class="tape-title">SCXQ2 ATOMIC</div>
+                <div class="tape-subtitle">SCX Cipher Dashboard</div>
+              </div>
+            </div>
+            <div class="tape-description">
+              Self-contained atomic tape demonstrating SCXQ2 hazard cipher,
+              ASX block runtime, symbolic compression, and static DNS resolution.
+            </div>
+            <div class="tape-features">
+              <span class="feature-tag">SCX Cipher</span>
+              <span class="feature-tag">87% Compression</span>
+              <span class="feature-tag">Self-Registering</span>
+              <span class="feature-tag">Static DNS</span>
+            </div>
+            <div class="tape-actions">
+              <a href="./scxq2-atomic.html" class="btn">▶️ LAUNCH</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEVELOPMENT TOOLS -->
+      <div class="section">
+        <h2 class="section-title">
+          <span>🛠️</span>
+          <span>Development Tools</span>
+        </h2>
+        <div class="tape-grid">
+          <!-- TYSON-CHOMSKY CONSOLE -->
+          <div class="tape-card">
+            <div class="status-badge">LIVE</div>
+            <div class="tape-header">
+              <div class="tape-icon">⚡</div>
+              <div class="tape-info">
+                <div class="tape-title">TYSON-CHOMSKY FUSION</div>
+                <div class="tape-subtitle">AI Reasoning Engine</div>
+              </div>
+            </div>
+            <div class="tape-description">
+              Empirical evidence (Tyson) debates symbolic constraints (Chomsky).
+              3-round fusion with public DBs, LLMs, and XJSON/K'UHUL grammars.
+            </div>
+            <div class="tape-features">
+              <span class="feature-tag">Debate AI</span>
+              <span class="feature-tag">Public DBs</span>
+              <span class="feature-tag">AST Validation</span>
+              <span class="feature-tag">Real-time Logs</span>
+            </div>
+            <div class="tape-actions">
+              <a href="./tyson-chomsky-console.html" class="btn">▶️ CONSOLE</a>
+            </div>
+          </div>
+
+          <!-- PRIME SETTINGS -->
+          <div class="tape-card">
+            <div class="status-badge">LIVE</div>
+            <div class="tape-header">
+              <div class="tape-icon">🔐</div>
+              <div class="tape-info">
+                <div class="tape-title">PRIME SETTINGS</div>
+                <div class="tape-subtitle">Secure API Management</div>
+              </div>
+            </div>
+            <div class="tape-description">
+              Web Crypto API-powered secure storage for API keys.
+              AES-GCM 256-bit encryption, PBKDF2 key derivation, zero-server architecture.
+            </div>
+            <div class="tape-features">
+              <span class="feature-tag">AES-GCM</span>
+              <span class="feature-tag">PBKDF2</span>
+              <span class="feature-tag">Zero Server</span>
+              <span class="feature-tag">Export/Import</span>
+            </div>
+            <div class="tape-actions">
+              <a href="./prime-settings.html" class="btn">▶️ CONFIGURE</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SYSTEM COMPONENTS -->
+      <div class="section">
+        <h2 class="section-title">
+          <span>⚙️</span>
+          <span>System Components</span>
+        </h2>
+        <div class="tape-grid">
+          <!-- OMEGA KERNEL -->
+          <div class="tape-card">
+            <div class="status-badge dev">SYSTEM</div>
+            <div class="tape-header">
+              <div class="tape-icon">⟁</div>
+              <div class="tape-info">
+                <div class="tape-title">ΩOS TRINITY KERNEL</div>
+                <div class="tape-subtitle">Service Worker Runtime</div>
+              </div>
+            </div>
+            <div class="tape-description">
+              Browser-based OS kernel. K'UHUL process table, AST transformer,
+              tape registration, offline caching, and unified API gateway.
+            </div>
+            <div class="tape-features">
+              <span class="feature-tag">Service Worker</span>
+              <span class="feature-tag">K'UHUL AST</span>
+              <span class="feature-tag">Offline First</span>
+              <span class="feature-tag">Process Table</span>
+            </div>
+            <div class="tape-actions">
+              <a href="/status" class="btn">▶️ STATUS</a>
+            </div>
+          </div>
+
+          <!-- KLH HIVE -->
+          <div class="tape-card">
+            <div class="status-badge dev">SYSTEM</div>
+            <div class="tape-header">
+              <div class="tape-icon">🌐</div>
+              <div class="tape-info">
+                <div class="tape-title">KLH HIVE MESH</div>
+                <div class="tape-subtitle">Virtual Networking</div>
+              </div>
+            </div>
+            <div class="tape-description">
+              Distributed MMORPG mesh networking. Torrent-style shard distribution,
+              virtual portals, tape heartbeats, and peer discovery.
+            </div>
+            <div class="tape-features">
+              <span class="feature-tag">Mesh Network</span>
+              <span class="feature-tag">Shards</span>
+              <span class="feature-tag">Portals</span>
+              <span class="feature-tag">P2P</span>
+            </div>
+            <div class="tape-actions">
+              <a href="/api/hive/status" class="btn">▶️ MONITOR</a>
+            </div>
+          </div>
+
+          <!-- ASX-VM -->
+          <div class="tape-card">
+            <div class="status-badge new">STANDALONE</div>
+            <div class="tape-header">
+              <div class="tape-icon">📦</div>
+              <div class="tape-info">
+                <div class="tape-title">ASX-VM</div>
+                <div class="tape-subtitle">XJSON Virtual Machine</div>
+              </div>
+            </div>
+            <div class="tape-description">
+              Standalone VM that runs .xjson files without browser.
+              Block-based rendering, symbolic cipher, 60 FPS, &lt;0.5s boot time.
+            </div>
+            <div class="tape-features">
+              <span class="feature-tag">Python</span>
+              <span class="feature-tag">Pygame</span>
+              <span class="feature-tag">60 FPS</span>
+              <span class="feature-tag">Standalone</span>
+            </div>
+            <div class="tape-actions">
+              <span class="btn" style="opacity: 0.5; cursor: not-allowed;">Desktop Only</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div class="footer-links">
+        <a href="https://github.com/cannaseedus-bot/XJSON-SERVER" class="footer-link">GitHub</a>
+        <a href="/api/docs" class="footer-link">API Docs</a>
+        <a href="/RUN_COMPLETE_SYSTEM.md" class="footer-link">System Guide</a>
+        <a href="https://github.com/cannaseedus-bot/ASX-DOOM-WORLD" class="footer-link">DOOM World Repo</a>
+      </div>
+      <div>
+        <strong>ΩOS • K'UHUL • XJSON</strong> — Universal Platform for Interactive Systems
+      </div>
+      <div style="margin-top: 0.5rem; font-size: 0.85rem;">
+        "Any kid can build a dynasty" • ASX Interactive Systems 2025
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════
+    // ΩOS LAUNCHER - SYSTEM INTEGRATION
+    // ═══════════════════════════════════════════════════════════
+
+    // Check Service Worker status
+    async function checkSystemStatus() {
+      const statKernel = document.getElementById('stat-kernel');
+      const statHive = document.getElementById('stat-hive');
+
+      // Check Service Worker
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration && registration.active) {
+          statKernel.textContent = 'ONLINE';
+          statKernel.style.color = 'var(--omega-green)';
+        } else {
+          statKernel.textContent = 'OFFLINE';
+          statKernel.style.color = '#ff6600';
+        }
+      } else {
+        statKernel.textContent = 'N/A';
+        statKernel.style.color = '#999';
+      }
+
+      // Check KLH Hive
+      try {
+        const res = await fetch('/api/hive/heartbeat?tape=launcher');
+        if (res.ok) {
+          statHive.textContent = 'MESH';
+          statHive.style.color = 'var(--omega-cyan)';
+        }
+      } catch {
+        statHive.textContent = 'SOLO';
+        statHive.style.color = '#999';
+      }
+    }
+
+    // Self-register as launcher tape
+    (function() {
+      console.log('%c⟁ ΩOS TAPE LAUNCHER ⟁', 'color: #ff0000; font-size: 20px; font-weight: bold;');
+      console.log('%c"Any kid can build a dynasty"', 'color: #ffd700; font-size: 14px;');
+      console.log('');
+      console.log('Available Tapes:');
+      console.log('  🔥 ASX DOOM WORLD - 3D FPS game engine');
+      console.log('  ☣️ SCXQ2 ATOMIC - SCX cipher dashboard');
+      console.log('  ⚡ TYSON-CHOMSKY - AI reasoning engine');
+      console.log('  🔐 PRIME SETTINGS - Secure API management');
+      console.log('  ⟁ ΩOS TRINITY - Service Worker kernel');
+      console.log('  🌐 KLH HIVE - Mesh networking');
+      console.log('  📦 ASX-VM - Standalone virtual machine');
+      console.log('');
+      console.log('System Status: Checking...');
+
+      // Register with KLH Hive
+      fetch('/api/hive/heartbeat?tape=launcher')
+        .then(r => r.json())
+        .then(data => {
+          console.log('✓ Registered with KLH Hive:', data);
+        })
+        .catch(err => {
+          console.warn('⚠ KLH Hive unavailable');
+        });
+
+      // Register with Service Worker
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'TAPE_HEARTBEAT',
+          tape: 'launcher',
+          url: location.href,
+          time: Date.now(),
+          metadata: {
+            title: 'ΩOS Tape Launcher',
+            type: 'system',
+            role: 'master-index'
+          }
+        });
+      }
+
+      // Check system status
+      checkSystemStatus();
+      setInterval(checkSystemStatus, 30000); // Update every 30s
+    })();
+
+    // Card click handlers (open on click anywhere)
+    document.querySelectorAll('.tape-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        // Don't trigger if clicking a button
+        if (e.target.tagName === 'A' || e.target.closest('a')) return;
+
+        // Find the primary action button
+        const primaryBtn = card.querySelector('.btn:not(.secondary)');
+        if (primaryBtn) {
+          primaryBtn.click();
+        }
+      });
+    });
+
+    // Animate stats on load
+    function animateValue(id, start, end, duration) {
+      const element = document.getElementById(id);
+      if (!element || isNaN(end)) return;
+
+      const range = end - start;
+      const increment = range / (duration / 16);
+      let current = start;
+
+      const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+          current = end;
+          clearInterval(timer);
+        }
+        element.textContent = Math.round(current);
+      }, 16);
+    }
+
+    window.addEventListener('load', () => {
+      animateValue('stat-tapes', 0, 7, 1000);
+      animateValue('stat-studios', 0, 5, 1200);
+    });
+  </script>
+</body>
+</html>
