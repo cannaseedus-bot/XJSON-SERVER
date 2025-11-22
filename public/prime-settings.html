@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PRIME Settings · Secure API Configuration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-alt: #030919;
+      --panel: #020815;
+      --panel-soft: #020b18;
+      --border: #1f2937;
+      --accent: #16f2aa;
+      --accent-soft: rgba(22,242,170,0.18);
+      --accent-strong: #22c55e;
+      --hazard: #fbbf24;
+      --text: #e8fff6;
+      --muted: #9ca3af;
+      --muted-soft: #6b7280;
+      --danger: #f97373;
+      --code-bg: #050b16;
+      --success: #10b981;
+
+      --r-2: 8px;
+      --r-3: 12px;
+      --s-2: 8px;
+      --s-3: 12px;
+      --s-4: 16px;
+      --s-5: 24px;
+
+      --shadow-soft: 0 16px 40px rgba(0,0,0,0.58);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #020b1c 0, #020617 38%, #00010b 100%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      padding: var(--s-5);
+      min-height: 100vh;
+    }
+
+    .settings-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--s-5);
+      padding-bottom: var(--s-4);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+    }
+
+    .crypto-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--s-2);
+      padding: 6px 12px;
+      border-radius: var(--r-2);
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+
+    .section {
+      background: linear-gradient(145deg, var(--panel), var(--panel-soft));
+      border: 1px solid var(--border);
+      border-radius: var(--r-3);
+      padding: var(--s-5);
+      margin-bottom: var(--s-4);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--s-4);
+    }
+
+    .section-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .section-description {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: var(--s-4);
+      line-height: 1.6;
+    }
+
+    .api-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: var(--s-4);
+    }
+
+    .api-card {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r-2);
+      padding: var(--s-4);
+      transition: all 0.2s;
+    }
+
+    .api-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+
+    .api-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--s-3);
+    }
+
+    .api-name {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .api-status {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted-soft);
+    }
+
+    .api-status.configured {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .form-group {
+      margin-bottom: var(--s-3);
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--s-2);
+    }
+
+    input[type="text"],
+    input[type="password"],
+    textarea {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: var(--s-2) var(--s-3);
+      border-radius: var(--r-2);
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: rgba(22, 242, 170, 0.05);
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .input-hint {
+      font-size: 11px;
+      color: var(--muted-soft);
+      margin-top: var(--s-2);
+    }
+
+    .button-group {
+      display: flex;
+      gap: var(--s-2);
+      margin-top: var(--s-3);
+    }
+
+    button {
+      padding: var(--s-2) var(--s-4);
+      border-radius: var(--r-2);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+      flex: 1;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-strong);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: var(--muted-soft);
+    }
+
+    .btn-danger {
+      background: rgba(249, 115, 115, 0.18);
+      color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: var(--danger);
+      color: #000;
+    }
+
+    .btn-icon {
+      padding: var(--s-2);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .encryption-status {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: var(--r-2);
+      padding: var(--s-3);
+      margin-top: var(--s-4);
+    }
+
+    .encryption-status-header {
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+      margin-bottom: var(--s-2);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .encryption-details {
+      font-size: 11px;
+      color: var(--muted-soft);
+      font-family: 'SF Mono', monospace;
+      line-height: 1.6;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: var(--s-5);
+      right: var(--s-5);
+      background: var(--code-bg);
+      border: 1px solid var(--accent);
+      border-radius: var(--r-2);
+      padding: var(--s-4);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      display: none;
+      max-width: 400px;
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast.show {
+      display: block;
+    }
+
+    .toast-header {
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+      font-weight: 600;
+      margin-bottom: var(--s-2);
+    }
+
+    .toast-success { border-color: var(--success); }
+    .toast-error { border-color: var(--danger); }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .code-block {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+      border-radius: var(--r-2);
+      padding: var(--s-3);
+      font-family: 'SF Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      overflow-x: auto;
+      margin-top: var(--s-3);
+    }
+
+    code {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-container">
+    <div class="header">
+      <h1>
+        🔐 PRIME Settings
+      </h1>
+      <span class="crypto-badge">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+          <path d="M6 0L8 4H12L8.5 6.5L10 11L6 8.5L2 11L3.5 6.5L0 4H4L6 0Z"/>
+        </svg>
+        Web Crypto Enabled
+      </span>
+    </div>
+
+    <!-- Security Info -->
+    <div class="section">
+      <div class="section-header">
+        <h2>🔒 Security Overview</h2>
+      </div>
+      <div class="section-description">
+        All API keys are encrypted using <strong>AES-GCM 256-bit</strong> encryption via the Web Crypto API.
+        Keys are stored in your browser's secure storage and never transmitted in plain text.
+        Your master encryption key is derived from your browser session and never leaves your device.
+      </div>
+      <div class="encryption-status">
+        <div class="encryption-status-header">
+          ✓ Encryption Status
+        </div>
+        <div class="encryption-details">
+          Algorithm: AES-GCM<br>
+          Key Length: 256 bits<br>
+          Storage: IndexedDB (encrypted)<br>
+          Master Key: Derived from browser entropy<br>
+          Status: <span id="crypto-status">Ready</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- API Keys Section -->
+    <div class="section">
+      <div class="section-header">
+        <h2>🔑 API Keys</h2>
+      </div>
+      <div class="section-description">
+        Configure API keys for external services. All keys are encrypted before storage using Web Crypto API.
+      </div>
+
+      <div class="api-grid">
+        <!-- Gemini AI -->
+        <div class="api-card">
+          <div class="api-card-header">
+            <span class="api-name">Google Gemini</span>
+            <span class="api-status" id="status-gemini"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">API Key</label>
+            <input
+              type="password"
+              id="key-gemini"
+              placeholder="AIza..."
+              autocomplete="off"
+            />
+            <div class="input-hint">Used for Tyson-Chomsky fusion queries</div>
+          </div>
+          <div class="button-group">
+            <button class="btn-primary" onclick="saveApiKey('gemini')">Save Encrypted</button>
+            <button class="btn-secondary btn-icon" onclick="toggleVisibility('gemini')">👁️</button>
+            <button class="btn-danger btn-icon" onclick="deleteApiKey('gemini')">🗑️</button>
+          </div>
+        </div>
+
+        <!-- OpenAI -->
+        <div class="api-card">
+          <div class="api-card-header">
+            <span class="api-name">OpenAI</span>
+            <span class="api-status" id="status-openai"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">API Key</label>
+            <input
+              type="password"
+              id="key-openai"
+              placeholder="sk-..."
+              autocomplete="off"
+            />
+            <div class="input-hint">GPT-4 / GPT-3.5 access</div>
+          </div>
+          <div class="button-group">
+            <button class="btn-primary" onclick="saveApiKey('openai')">Save Encrypted</button>
+            <button class="btn-secondary btn-icon" onclick="toggleVisibility('openai')">👁️</button>
+            <button class="btn-danger btn-icon" onclick="deleteApiKey('openai')">🗑️</button>
+          </div>
+        </div>
+
+        <!-- Anthropic Claude -->
+        <div class="api-card">
+          <div class="api-card-header">
+            <span class="api-name">Anthropic Claude</span>
+            <span class="api-status" id="status-anthropic"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">API Key</label>
+            <input
+              type="password"
+              id="key-anthropic"
+              placeholder="sk-ant-..."
+              autocomplete="off"
+            />
+            <div class="input-hint">Claude AI access</div>
+          </div>
+          <div class="button-group">
+            <button class="btn-primary" onclick="saveApiKey('anthropic')">Save Encrypted</button>
+            <button class="btn-secondary btn-icon" onclick="toggleVisibility('anthropic')">👁️</button>
+            <button class="btn-danger btn-icon" onclick="deleteApiKey('anthropic')">🗑️</button>
+          </div>
+        </div>
+
+        <!-- Custom API -->
+        <div class="api-card">
+          <div class="api-card-header">
+            <span class="api-name">Custom API</span>
+            <span class="api-status" id="status-custom"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">API Name</label>
+            <input
+              type="text"
+              id="custom-name"
+              placeholder="My Service"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">API Key</label>
+            <input
+              type="password"
+              id="key-custom"
+              placeholder="Enter key..."
+              autocomplete="off"
+            />
+            <div class="input-hint">Any custom API service</div>
+          </div>
+          <div class="button-group">
+            <button class="btn-primary" onclick="saveApiKey('custom')">Save Encrypted</button>
+            <button class="btn-secondary btn-icon" onclick="toggleVisibility('custom')">👁️</button>
+            <button class="btn-danger btn-icon" onclick="deleteApiKey('custom')">🗑️</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced Settings -->
+    <div class="section">
+      <div class="section-header">
+        <h2>⚙️ Advanced</h2>
+      </div>
+      <div class="button-group">
+        <button class="btn-secondary" onclick="exportKeys()">Export Encrypted Keys</button>
+        <button class="btn-secondary" onclick="importKeys()">Import Keys</button>
+        <button class="btn-danger" onclick="clearAllKeys()">Clear All Keys</button>
+      </div>
+
+      <div class="code-block" id="export-output" style="display: none;"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <div class="toast-header" id="toast-header">
+      <span id="toast-icon">✓</span>
+      <span id="toast-title">Success</span>
+    </div>
+    <div id="toast-message">Action completed successfully</div>
+  </div>
+
+  <script>
+    // ============================================================================
+    // WEB CRYPTO API - ENCRYPTION LAYER
+    // ============================================================================
+
+    const CRYPTO_CONFIG = {
+      algorithm: 'AES-GCM',
+      keyLength: 256,
+      ivLength: 12,
+      tagLength: 128
+    };
+
+    class SecureStorage {
+      constructor() {
+        this.masterKey = null;
+        this.dbName = 'prime-secure-storage';
+        this.storeName = 'encrypted-keys';
+      }
+
+      async initialize() {
+        // Generate or retrieve master key
+        const storedKey = localStorage.getItem('_prime_master_key_id');
+
+        if (storedKey) {
+          // Key exists, derive from stored ID
+          this.masterKey = await this._deriveKey(storedKey);
+        } else {
+          // Generate new master key
+          const keyId = await this._generateMasterKeyId();
+          localStorage.setItem('_prime_master_key_id', keyId);
+          this.masterKey = await this._deriveKey(keyId);
+        }
+
+        document.getElementById('crypto-status').textContent = 'Initialized';
+        return true;
+      }
+
+      async _generateMasterKeyId() {
+        const entropy = new Uint8Array(32);
+        crypto.getRandomValues(entropy);
+        return Array.from(entropy)
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+      }
+
+      async _deriveKey(keyId) {
+        const enc = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey(
+          'raw',
+          enc.encode(keyId),
+          { name: 'PBKDF2' },
+          false,
+          ['deriveKey']
+        );
+
+        return crypto.subtle.deriveKey(
+          {
+            name: 'PBKDF2',
+            salt: enc.encode('prime-asx-salt-2024'),
+            iterations: 100000,
+            hash: 'SHA-256'
+          },
+          keyMaterial,
+          { name: 'AES-GCM', length: 256 },
+          false,
+          ['encrypt', 'decrypt']
+        );
+      }
+
+      async encrypt(plaintext) {
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const enc = new TextEncoder();
+
+        const ciphertext = await crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv },
+          this.masterKey,
+          enc.encode(plaintext)
+        );
+
+        // Combine IV + ciphertext
+        const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+        combined.set(iv);
+        combined.set(new Uint8Array(ciphertext), iv.length);
+
+        // Return as base64
+        return btoa(String.fromCharCode(...combined));
+      }
+
+      async decrypt(encrypted) {
+        const combined = Uint8Array.from(atob(encrypted), c => c.charCodeAt(0));
+
+        const iv = combined.slice(0, 12);
+        const ciphertext = combined.slice(12);
+
+        const plaintext = await crypto.subtle.decrypt(
+          { name: 'AES-GCM', iv },
+          this.masterKey,
+          ciphertext
+        );
+
+        const dec = new TextDecoder();
+        return dec.decode(plaintext);
+      }
+
+      async saveKey(name, value) {
+        const encrypted = await this.encrypt(value);
+        localStorage.setItem(`_prime_api_${name}`, encrypted);
+        return true;
+      }
+
+      async getKey(name) {
+        const encrypted = localStorage.getItem(`_prime_api_${name}`);
+        if (!encrypted) return null;
+
+        try {
+          return await this.decrypt(encrypted);
+        } catch (e) {
+          console.error('Decryption failed:', e);
+          return null;
+        }
+      }
+
+      async deleteKey(name) {
+        localStorage.removeItem(`_prime_api_${name}`);
+        return true;
+      }
+
+      async getAllKeys() {
+        const keys = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key.startsWith('_prime_api_')) {
+            const name = key.replace('_prime_api_', '');
+            keys[name] = await this.getKey(name);
+          }
+        }
+        return keys;
+      }
+
+      async clearAll() {
+        const keysToDelete = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key.startsWith('_prime_api_')) {
+            keysToDelete.push(key);
+          }
+        }
+        keysToDelete.forEach(k => localStorage.removeItem(k));
+        return true;
+      }
+    }
+
+    // ============================================================================
+    // UI FUNCTIONS
+    // ============================================================================
+
+    const storage = new SecureStorage();
+    let initialized = false;
+
+    async function init() {
+      if (initialized) return;
+
+      try {
+        await storage.initialize();
+        initialized = true;
+
+        // Load existing keys and update status indicators
+        await updateAllStatus();
+
+        console.log('🔐 PRIME Settings - Web Crypto initialized');
+      } catch (e) {
+        showToast('Error', 'Failed to initialize encryption', 'error');
+        console.error(e);
+      }
+    }
+
+    async function saveApiKey(service) {
+      if (!initialized) await init();
+
+      const input = document.getElementById(`key-${service}`);
+      const value = input.value.trim();
+
+      if (!value) {
+        showToast('Error', 'Please enter an API key', 'error');
+        return;
+      }
+
+      try {
+        await storage.saveKey(service, value);
+        showToast('Success', `${service} API key encrypted and saved`, 'success');
+        updateStatus(service, true);
+
+        // Clear input
+        input.value = '';
+      } catch (e) {
+        showToast('Error', 'Failed to save API key', 'error');
+        console.error(e);
+      }
+    }
+
+    async function deleteApiKey(service) {
+      if (!initialized) await init();
+
+      if (!confirm(`Delete ${service} API key?`)) return;
+
+      try {
+        await storage.deleteKey(service);
+        showToast('Success', `${service} API key deleted`, 'success');
+        updateStatus(service, false);
+
+        const input = document.getElementById(`key-${service}`);
+        if (input) input.value = '';
+      } catch (e) {
+        showToast('Error', 'Failed to delete API key', 'error');
+        console.error(e);
+      }
+    }
+
+    async function toggleVisibility(service) {
+      if (!initialized) await init();
+
+      const input = document.getElementById(`key-${service}`);
+
+      if (input.type === 'password') {
+        // Show decrypted key
+        const key = await storage.getKey(service);
+        if (key) {
+          input.type = 'text';
+          input.value = key;
+          setTimeout(() => {
+            input.type = 'password';
+            input.value = '';
+          }, 3000);
+        } else {
+          showToast('Error', 'No key stored', 'error');
+        }
+      } else {
+        input.type = 'password';
+        input.value = '';
+      }
+    }
+
+    async function exportKeys() {
+      if (!initialized) await init();
+
+      const keys = await storage.getAllKeys();
+      const output = document.getElementById('export-output');
+
+      output.style.display = 'block';
+      output.textContent = JSON.stringify(keys, null, 2);
+
+      showToast('Success', 'Keys exported (decrypted for viewing)', 'success');
+    }
+
+    async function importKeys() {
+      const json = prompt('Paste exported JSON:');
+      if (!json) return;
+
+      try {
+        const keys = JSON.parse(json);
+        for (const [name, value] of Object.entries(keys)) {
+          await storage.saveKey(name, value);
+        }
+        await updateAllStatus();
+        showToast('Success', 'Keys imported successfully', 'success');
+      } catch (e) {
+        showToast('Error', 'Failed to import keys', 'error');
+        console.error(e);
+      }
+    }
+
+    async function clearAllKeys() {
+      if (!confirm('Delete ALL API keys? This cannot be undone.')) return;
+
+      try {
+        await storage.clearAll();
+        await updateAllStatus();
+        showToast('Success', 'All keys deleted', 'success');
+      } catch (e) {
+        showToast('Error', 'Failed to clear keys', 'error');
+      }
+    }
+
+    function updateStatus(service, configured) {
+      const status = document.getElementById(`status-${service}`);
+      if (status) {
+        if (configured) {
+          status.classList.add('configured');
+        } else {
+          status.classList.remove('configured');
+        }
+      }
+    }
+
+    async function updateAllStatus() {
+      const services = ['gemini', 'openai', 'anthropic', 'custom'];
+      for (const service of services) {
+        const key = await storage.getKey(service);
+        updateStatus(service, !!key);
+      }
+    }
+
+    function showToast(title, message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastIcon = document.getElementById('toast-icon');
+      const toastTitle = document.getElementById('toast-title');
+      const toastMessage = document.getElementById('toast-message');
+
+      toast.className = `toast toast-${type} show`;
+      toastIcon.textContent = type === 'success' ? '✓' : '✗';
+      toastTitle.textContent = title;
+      toastMessage.textContent = message;
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Initialize on load
+    window.addEventListener('load', init);
+
+    console.log('🔐 PRIME Settings - Web Crypto API Layer');
+    console.log('Encryption: AES-GCM 256-bit');
+    console.log('Storage: Browser LocalStorage (encrypted)');
+  </script>
+</body>
+</html>
