@@ -1,0 +1,3 @@
+[submodule "public/doom-world"]
+	path = public/doom-world
+	url = https://github.com/cannaseedus-bot/ASX-DOOM-WORLD.git
