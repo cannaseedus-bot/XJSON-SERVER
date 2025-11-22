@@ -24,6 +24,10 @@ from klh_hive import (
     VirtualShardServer, DistributedHashTable, TorrentNodeManager,
     boot_hive, MMORPG_SHARD_CONFIG
 )
+from ai_npc_micronauts import (
+    NPCSpawner, NPCMicronaut, NPCCharacterData,
+    CHARACTER_DATABASE
+)
 
 # ============================================================================
 # MODELS
@@ -83,6 +87,21 @@ class SWPushNotificationRequest(BaseModel):
     subscription: Dict[str, Any]
     message: str
     data: Optional[Dict[str, Any]] = None
+
+class NPCSpawnRequest(BaseModel):
+    character_id: str
+    position: Dict[str, float]
+
+class NPCSpawnByRoleRequest(BaseModel):
+    role: str
+    position: Dict[str, float]
+    universe: Optional[str] = None
+
+class NPCInteractionRequest(BaseModel):
+    npc_id: str
+    player_id: str
+    message: str
+    context: Optional[Dict[str, Any]] = None
 
 # ============================================================================
 # ΩOS KERNEL PROCESS MANAGER
@@ -322,6 +341,9 @@ klh_hive: Optional[KLHHiveMesh] = None
 klh_portal: Optional[MMORPGGridPortal] = None
 dht = DistributedHashTable()
 torrent_manager = TorrentNodeManager(dht)
+
+# Initialize AI NPC system
+npc_spawner = NPCSpawner()
 
 # Create FastAPI app
 app = FastAPI(
@@ -886,6 +908,125 @@ async def sw_get_subscriptions():
     }
 
 # ============================================================================
+# AI NPC MICRONAUTS API ENDPOINTS
+# ============================================================================
+
+@app.post("/api/npc/spawn")
+async def npc_spawn(req: NPCSpawnRequest):
+    """Spawn AI NPC from character database"""
+    try:
+        npc = npc_spawner.spawn_npc(req.character_id, req.position)
+        return {
+            "success": True,
+            "npc_id": npc.npc_id,
+            "character": {
+                "id": npc.character.character_id,
+                "name": npc.character.name,
+                "universe": npc.character.game_universe,
+                "role": npc.character.role
+            },
+            "position": npc.position,
+            "state": npc.get_state()
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+@app.post("/api/npc/spawn/by-role")
+async def npc_spawn_by_role(req: NPCSpawnByRoleRequest):
+    """Spawn random NPC by role"""
+    try:
+        npc = npc_spawner.spawn_by_role(req.role, req.position, req.universe)
+        return {
+            "success": True,
+            "npc_id": npc.npc_id,
+            "character": {
+                "id": npc.character.character_id,
+                "name": npc.character.name,
+                "universe": npc.character.game_universe,
+                "role": npc.character.role
+            },
+            "position": npc.position
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+@app.post("/api/npc/interact")
+async def npc_interact(req: NPCInteractionRequest):
+    """Interact with NPC"""
+    npc = npc_spawner.get_npc(req.npc_id)
+    if not npc:
+        raise HTTPException(status_code=404, detail=f"NPC not found: {req.npc_id}")
+
+    interaction = npc.interact(req.player_id, req.message, req.context)
+    return interaction
+
+@app.get("/api/npc/{npc_id}")
+async def npc_get(npc_id: str):
+    """Get NPC details"""
+    npc = npc_spawner.get_npc(npc_id)
+    if not npc:
+        raise HTTPException(status_code=404, detail=f"NPC not found: {npc_id}")
+
+    return {
+        "npc_id": npc.npc_id,
+        "character": npc.character.to_dict(),
+        "position": npc.position,
+        "state": npc.state,
+        "interactions": len(npc.interaction_history)
+    }
+
+@app.delete("/api/npc/{npc_id}")
+async def npc_despawn(npc_id: str):
+    """Despawn NPC"""
+    success = npc_spawner.despawn_npc(npc_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"NPC not found: {npc_id}")
+
+    return {"success": True, "npc_id": npc_id, "despawned": True}
+
+@app.get("/api/npc/list/all")
+async def npc_list_all():
+    """Get all spawned NPCs"""
+    npcs = npc_spawner.get_all_npcs()
+    return {
+        "npcs": npcs,
+        "total": len(npcs)
+    }
+
+@app.get("/api/npc/database/characters")
+async def npc_database_characters():
+    """Get all available characters in database"""
+    characters = []
+    for char_id, char_data in CHARACTER_DATABASE.items():
+        characters.append({
+            "character_id": char_id,
+            "name": char_data.name,
+            "universe": char_data.game_universe,
+            "role": char_data.role,
+            "personality": char_data.personality
+        })
+
+    return {
+        "characters": characters,
+        "total": len(characters),
+        "universes": list(set(c["universe"] for c in characters)),
+        "roles": list(set(c["role"] for c in characters))
+    }
+
+@app.get("/api/npc/nearby")
+async def npc_get_nearby(x: float, y: float, z: float = 0, radius: float = 100.0):
+    """Get NPCs near position"""
+    position = {"x": x, "y": y, "z": z}
+    nearby_npcs = npc_spawner.get_npcs_near(position, radius)
+
+    return {
+        "position": position,
+        "radius": radius,
+        "npcs": [npc.get_state() for npc in nearby_npcs],
+        "count": len(nearby_npcs)
+    }
+
+# ============================================================================
 # HEALTH & INFO ENDPOINTS
 # ============================================================================
 
@@ -931,25 +1072,32 @@ def main():
     print("🎮 MMORPG Portal: http://localhost:7777/api/klh/portal/")
     print("📦 Torrent Network: http://localhost:7777/api/klh/torrent/")
     print("🔔 SW Push Notifications: http://localhost:7777/api/klh/sw/")
+    print("🤖 AI NPC Micronauts: http://localhost:7777/api/npc/")
     print("")
     print("🧠 PrimeOS Cognitive Shell: Active")
     print("📂 Virtual File System: Mounted")
     print("🌐 Static DNS Resolver: Ready")
     print("⚡ Distributed Hash Table: Ready")
     print("🎯 Torrent Node Manager: Ready")
+    print("🎭 AI NPC Spawner: Ready")
+    print(f"   • {len(CHARACTER_DATABASE)} characters loaded")
+    print(f"   • Universes: Skyrim, RDR2, GTA V, Warcraft III, Fallout, D&D")
     print("")
     print("💡 Try these endpoints:")
     print("   POST /api/klh/boot - Boot KLH Hive")
     print("   GET  /api/klh/status - Hive + Torrent stats")
-    print("   POST /api/klh/torrent/join - Join game as torrent node")
+    print("   POST /api/npc/spawn - Spawn AI NPC (Belethor, Dutch, etc.)")
+    print("   POST /api/npc/interact - Talk to NPCs")
+    print("   GET  /api/npc/database/characters - List all NPCs")
     print("   GET  /api/scx/benchmark/react-vs-kuhul")
-    print("   POST /api/kuhul/execute - Execute K'UHUL code")
     print("")
     print("🎮 MMORPG FEATURES:")
     print("   • Each player's server is an MMO portal")
     print("   • Players become torrent nodes when joining games")
     print("   • SW push notifications deliver torrent updates")
     print("   • Virtual mesh networking for cross-shard communication")
+    print("   • AI NPCs from fan wikis (GTA, RDR, Skyrim, Fallout, etc.)")
+    print("   • Contextual NPC behavior (vendors, quest givers, enemies)")
     print("")
     print("Press Ctrl+C to stop the server")
     print("")
