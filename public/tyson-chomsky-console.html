@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tyson-Chomsky Fusion Console · ASXR PRIME 1.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-alt: #030919;
+      --panel: #020815;
+      --panel-soft: #020b18;
+      --border: #1f2937;
+      --accent: #16f2aa;
+      --accent-soft: rgba(22,242,170,0.18);
+      --accent-strong: #22c55e;
+      --hazard: #fbbf24;
+      --text: #e8fff6;
+      --muted: #9ca3af;
+      --muted-soft: #6b7280;
+      --danger: #f97373;
+      --code-bg: #050b16;
+
+      --r-2: 8px;
+      --r-3: 12px;
+      --s-2: 8px;
+      --s-3: 12px;
+      --s-4: 16px;
+      --s-5: 24px;
+
+      --shadow-soft: 0 16px 40px rgba(0,0,0,0.58);
+      --shadow-hard: 0 0 0 1px rgba(22,242,170,0.2), 0 22px 50px rgba(0,0,0,0.92);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #020b1c 0, #020617 38%, #00010b 100%);
+      color: var(--text);
+      font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      padding: var(--s-4);
+      min-height: 100vh;
+    }
+
+    .console-container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--s-5);
+      padding-bottom: var(--s-3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: var(--r-2);
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge.ready {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+
+    .status-badge.error {
+      background: rgba(249, 115, 115, 0.18);
+      color: var(--danger);
+    }
+
+    .controls {
+      display: flex;
+      gap: var(--s-3);
+      margin-bottom: var(--s-4);
+    }
+
+    .control-panel {
+      background: linear-gradient(145deg, var(--panel), var(--panel-soft));
+      border: 1px solid var(--border);
+      border-radius: var(--r-3);
+      padding: var(--s-4);
+      flex: 1;
+    }
+
+    .control-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--s-2);
+    }
+
+    input, select, button {
+      width: 100%;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: var(--s-2) var(--s-3);
+      border-radius: var(--r-2);
+      font-family: inherit;
+      font-size: 13px;
+      margin-bottom: var(--s-2);
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    button {
+      background: var(--accent);
+      color: #000;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    button:hover {
+      background: var(--accent-strong);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.secondary {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    button.secondary:hover {
+      background: var(--muted-soft);
+    }
+
+    .logs-panel {
+      background: linear-gradient(145deg, var(--panel), var(--panel-soft));
+      border: 1px solid var(--border);
+      border-radius: var(--r-3);
+      padding: var(--s-4);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .logs-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--s-3);
+    }
+
+    .logs-header h2 {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .log-count {
+      font-size: 11px;
+      color: var(--muted-soft);
+    }
+
+    .logs-container {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-3);
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .log-entry {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r-2);
+      padding: var(--s-3);
+      transition: all 0.2s;
+    }
+
+    .log-entry:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+
+    .log-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--s-2);
+      font-size: 11px;
+      color: var(--muted-soft);
+    }
+
+    .log-time {
+      color: var(--accent);
+    }
+
+    .log-mode {
+      padding: 2px 8px;
+      border-radius: var(--r-2);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+
+    .log-mode.fusion {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .log-mode.tyson {
+      background: rgba(251, 191, 36, 0.18);
+      color: var(--hazard);
+    }
+
+    .log-mode.chomsky {
+      background: rgba(147, 51, 234, 0.18);
+      color: #a78bfa;
+    }
+
+    .log-question {
+      color: var(--text);
+      margin-bottom: var(--s-2);
+      font-weight: 500;
+    }
+
+    .log-result {
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 2px solid var(--accent);
+      padding: var(--s-2) var(--s-3);
+      border-radius: var(--r-2);
+      font-size: 12px;
+      color: var(--muted);
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--s-5);
+      color: var(--muted-soft);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: var(--s-3);
+      opacity: 0.3;
+    }
+
+    .scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .scrollbar::-webkit-scrollbar-track {
+      background: var(--code-bg);
+      border-radius: var(--r-2);
+    }
+
+    .scrollbar::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: var(--r-2);
+    }
+
+    .scrollbar::-webkit-scrollbar-thumb:hover {
+      background: var(--muted-soft);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .loading {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    code {
+      color: var(--accent);
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div class="console-container">
+    <div class="header">
+      <h1>
+        🧠 Tyson-Chomsky Fusion Console
+      </h1>
+      <span class="status-badge ready" id="status-badge">Ready</span>
+    </div>
+
+    <div class="controls">
+      <div class="control-panel">
+        <div class="control-label">Question / Query</div>
+        <input
+          type="text"
+          id="query-input"
+          placeholder="Generate XJSON schema for news articles..."
+          value="Generate XJSON schema for news articles"
+        />
+
+        <div class="control-label">Mode</div>
+        <select id="mode-select">
+          <option value="fusion" selected>🔀 Fusion (Tyson + Chomsky)</option>
+          <option value="tyson">🔭 Tyson (Empirical Only)</option>
+          <option value="chomsky">📐 Chomsky (Symbolic Only)</option>
+        </select>
+
+        <button id="query-btn">Execute Query</button>
+        <button id="probe-btn" class="secondary">Probe Engine Status</button>
+        <button id="refresh-btn" class="secondary">Refresh Logs</button>
+      </div>
+    </div>
+
+    <div class="logs-panel">
+      <div class="logs-header">
+        <h2>Fusion Logs</h2>
+        <span class="log-count" id="log-count">0 entries</span>
+      </div>
+
+      <div class="logs-container scrollbar" id="logs-container">
+        <div class="empty-state">
+          <div class="empty-state-icon">🧪</div>
+          <div>No fusion logs yet. Execute a query to start.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // UI State
+    const elements = {
+      queryInput: document.getElementById('query-input'),
+      modeSelect: document.getElementById('mode-select'),
+      queryBtn: document.getElementById('query-btn'),
+      probeBtn: document.getElementById('probe-btn'),
+      refreshBtn: document.getElementById('refresh-btn'),
+      logsContainer: document.getElementById('logs-container'),
+      logCount: document.getElementById('log-count'),
+      statusBadge: document.getElementById('status-badge')
+    };
+
+    // API Functions
+    async function probeEngine() {
+      try {
+        const response = await fetch('/api/tyson-chomsky/probe');
+        const data = await response.json();
+        console.log('Probe result:', data);
+        alert(`Engine: ${data.engine}\nStatus: ${data.status}\nGrammars: ${Object.keys(data.grammars).length}`);
+        setStatus('ready', 'Ready');
+      } catch (error) {
+        console.error('Probe failed:', error);
+        setStatus('error', 'Error');
+        alert('Failed to probe engine: ' + error.message);
+      }
+    }
+
+    async function executeQuery() {
+      const question = elements.queryInput.value;
+      const mode = elements.modeSelect.value;
+
+      if (!question.trim()) {
+        alert('Please enter a question');
+        return;
+      }
+
+      setStatus('loading', 'Processing...');
+      elements.queryBtn.disabled = true;
+      elements.queryBtn.textContent = 'Processing...';
+
+      try {
+        const response = await fetch('/api/tyson-chomsky/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, mode })
+        });
+
+        const data = await response.json();
+        console.log('Query result:', data);
+
+        // Refresh logs to show new entry
+        await loadLogs();
+
+        setStatus('ready', 'Ready');
+      } catch (error) {
+        console.error('Query failed:', error);
+        setStatus('error', 'Error');
+        alert('Query failed: ' + error.message);
+      } finally {
+        elements.queryBtn.disabled = false;
+        elements.queryBtn.textContent = 'Execute Query';
+      }
+    }
+
+    async function loadLogs() {
+      try {
+        const response = await fetch('/api/tyson-chomsky/logs');
+        const data = await response.json();
+
+        if (data.logs && data.logs.length > 0) {
+          renderLogs(data.logs);
+          elements.logCount.textContent = `${data.showing} entries (${data.total} total)`;
+        } else {
+          showEmptyState();
+        }
+      } catch (error) {
+        console.error('Failed to load logs:', error);
+        showEmptyState();
+      }
+    }
+
+    function renderLogs(logs) {
+      const logsHTML = logs
+        .reverse()
+        .map(log => {
+          const mode = log.req?.mode || 'fusion';
+          const question = log.req?.question || log.req?.query || 'Unknown query';
+          const time = new Date(log.time).toLocaleTimeString();
+          const resultSummary = getResultSummary(log.result, mode);
+
+          return `
+            <div class="log-entry">
+              <div class="log-meta">
+                <span class="log-time">${time}</span>
+                <span class="log-mode ${mode}">${mode}</span>
+              </div>
+              <div class="log-question">${escapeHtml(question)}</div>
+              <div class="log-result">${resultSummary}</div>
+            </div>
+          `;
+        })
+        .join('');
+
+      elements.logsContainer.innerHTML = logsHTML;
+    }
+
+    function getResultSummary(result, mode) {
+      if (!result) return 'No result';
+
+      if (mode === 'fusion') {
+        return `Fusion Strategy: ${result.fusion?.strategy || 'N/A'}
+Rounds: ${result.fusion?.rounds || 0}
+Winner: ${result.fusion?.winner || 'N/A'}
+Output: ${result.fusion?.output?.fusion_summary || 'No summary'}
+Validated: ${result.fusion?.output?.validated ? '✓' : '✗'}`;
+      } else if (mode === 'tyson') {
+        const sources = result.tyson?.sources_used || [];
+        const evidence = result.tyson?.evidence || [];
+        return `Sources: ${sources.length}
+Evidence Items: ${evidence.length}
+${evidence.map(e => `• ${e.source}: ${e.snippet || e.confidence}`).join('\n')}`;
+      } else {
+        return `Grammar: ${result.chomsky?.grammar || 'N/A'}
+Policies Applied: ${result.chomsky?.policies_applied ? Object.keys(result.chomsky.policies_applied).length : 0}
+Validation: ${result.chomsky?.validation || 'N/A'}`;
+      }
+    }
+
+    function showEmptyState() {
+      elements.logsContainer.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🧪</div>
+          <div>No fusion logs yet. Execute a query to start.</div>
+        </div>
+      `;
+      elements.logCount.textContent = '0 entries';
+    }
+
+    function setStatus(type, text) {
+      elements.statusBadge.className = `status-badge ${type}`;
+      elements.statusBadge.textContent = text;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Event Listeners
+    elements.queryBtn.addEventListener('click', executeQuery);
+    elements.probeBtn.addEventListener('click', probeEngine);
+    elements.refreshBtn.addEventListener('click', loadLogs);
+
+    elements.queryInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') executeQuery();
+    });
+
+    // Auto-refresh logs every 5 seconds
+    setInterval(loadLogs, 5000);
+
+    // Initial load
+    loadLogs();
+
+    console.log('🧠 Tyson-Chomsky Fusion Console - Ready');
+    console.log('Engine: tyson-chomsky-v1');
+    console.log('Modes: fusion, tyson, chomsky');
+  </script>
+</body>
+</html>

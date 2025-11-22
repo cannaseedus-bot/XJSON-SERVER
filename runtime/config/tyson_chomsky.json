@@ -1,0 +1,54 @@
+{
+  "engine": "tyson-chomsky-v1",
+  "description": "Fusion engine combining empirical (Tyson) and symbolic (Chomsky) reasoning for ASXR PRIME 1.0",
+  "modes": {
+    "tyson": {
+      "role": "empirical_evidence",
+      "sources": {
+        "public_dbs": [
+          "https://en.wikipedia.org/w/api.php",
+          "https://api.openalex.org/works",
+          "https://api.crossref.org/works",
+          "https://api.dataverse.harvard.edu",
+          "https://api.publicapis.org/entries"
+        ],
+        "gemini_like": {
+          "provider": "Google",
+          "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent",
+          "api_key_env": "GEMINI_API_KEY",
+          "timeout_ms": 120000,
+          "fallback": "local_inference"
+        }
+      },
+      "parameters": {
+        "temperature": 0.8,
+        "top_p": 0.9,
+        "max_tokens": 4096
+      }
+    },
+    "chomsky": {
+      "role": "symbolic_constraints",
+      "grammars": {
+        "xjson_ast": "xcfe://grammars/xjson_1_0",
+        "kuhul_glyphs": "xcfe://grammars/kuhul_core",
+        "scxq2": "xcfe://grammars/scxq2_symbolic"
+      },
+      "policies": {
+        "require_well_typed_xjson": true,
+        "forbid_side_effects": true,
+        "max_depth": 32
+      },
+      "parameters": {
+        "logical_temp": 0.3,
+        "precision_bias": 0.85
+      }
+    }
+  },
+  "fusion": {
+    "strategy": "debate",
+    "max_rounds": 3,
+    "tie_breaker": "chomsky_must_approve",
+    "log_route": "/runtime/logs/tyson_chomsky.json"
+  },
+  "status": "ready"
+}
