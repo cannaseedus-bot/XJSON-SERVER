@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ASX SCXQ2 ATOMIC INDEX — Local Runtime</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!--
+    ASX SCXQ2 ATOMIC INDEX — SINGLE FILE RUNTIME
+
+    • Atomic HTML: [x], [row], [col], [panel], etc.
+    • SCXQ2 Layer: hazard-sign cipher + packed block packets
+    • ASX Block Runtime: component registry + renderer
+    • XJSON Local REST: /xjson/* helper + "static DNS" table
+    • Demo: buttons that render SCXQ2 blocks and show REST target URL
+
+    Drop into cPanel or any static host and open in browser.
+  -->
+
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-alt: #030919;
+      --panel: #020815;
+      --panel-soft: #020b18;
+      --border: #1f2937;
+      --accent: #16f2aa;
+      --accent-soft: rgba(22,242,170,0.18);
+      --accent-strong: #22c55e;
+      --hazard: #fbbf24;
+      --text: #e8fff6;
+      --muted: #9ca3af;
+      --muted-soft: #6b7280;
+      --danger: #f97373;
+      --code-bg: #050b16;
+
+      --r-1: 4px;
+      --r-2: 8px;
+      --r-3: 12px;
+      --r-4: 16px;
+
+      --s-1: 4px;
+      --s-2: 8px;
+      --s-3: 12px;
+      --s-4: 16px;
+      --s-5: 24px;
+      --s-6: 32px;
+
+      --shadow-soft: 0 16px 40px rgba(0,0,0,0.58);
+      --shadow-hard: 0 0 0 1px rgba(22,242,170,0.2),
+                     0 22px 50px rgba(0,0,0,0.92);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top, #020b1c 0, #020617 38%, #00010b 100%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+                   sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Atomic HTML baseline */
+    [x] {
+      all: unset;
+      display: block;
+      box-sizing: border-box;
+      color: inherit;
+      font: inherit;
+    }
+
+    [xt] {
+      all: unset;
+      display: inline;
+      box-sizing: border-box;
+      color: inherit;
+      font: inherit;
+    }
+
+    /* Layout tokens */
+    [row] { display: flex; flex-direction: row; }
+    [col] { display: flex; flex-direction: column; }
+    [center] { align-items: center; justify-content: center; }
+    [align-center] { align-items: center; }
+    [justify-center] { justify-content: center; }
+    [spread] { justify-content: space-between; }
+    [wrap] { flex-wrap: wrap; }
+
+    [gap="1"] { gap: var(--s-1); }
+    [gap="2"] { gap: var(--s-2); }
+    [gap="3"] { gap: var(--s-3); }
+    [gap="4"] { gap: var(--s-4); }
+    [gap="5"] { gap: var(--s-5); }
+
+    [pad="1"] { padding: var(--s-1); }
+    [pad="2"] { padding: var(--s-2); }
+    [pad="3"] { padding: var(--s-3); }
+    [pad="4"] { padding: var(--s-4); }
+    [pad="5"] { padding: var(--s-5); }
+
+    [w="full"] { width: 100%; }
+    [w="half"] { width: 50%; }
+    [w="auto"] { width: auto; }
+
+    /* Surfaces */
+    [panel] {
+      background: linear-gradient(145deg, var(--panel), var(--panel-soft));
+      border-radius: var(--r-3);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      padding: var(--s-4);
+    }
+
+    [panel-soft] {
+      background: radial-gradient(circle at top left, #020b18, #020617 55%);
+      border-radius: var(--r-2);
+      border: 1px solid rgba(148,163,184,0.35);
+      padding: var(--s-3);
+    }
+
+    [panel-accent] {
+      background: radial-gradient(circle at top left,
+        rgba(22,242,170,0.18), #020815 55%);
+      border-radius: var(--r-3);
+      border: 1px solid rgba(22,242,170,0.55);
+      box-shadow: var(--shadow-hard);
+      padding: var(--s-4);
+    }
+
+    [divider] {
+      border-bottom: 1px solid rgba(148,163,184,0.35);
+      margin: var(--s-3) 0;
+    }
+
+    [strip] {
+      border-radius: var(--r-1);
+      padding: 4px 10px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid rgba(148,163,184,0.5);
+      background:
+        radial-gradient(circle at left, rgba(22,242,170,0.12), transparent 65%);
+      color: var(--muted);
+    }
+
+    [strip-hazard] {
+      border-radius: var(--r-1);
+      padding: 4px 10px;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border: 1px solid rgba(251,191,36,0.8);
+      background:
+        linear-gradient(90deg, rgba(251,191,36,0.18), rgba(30,64,175,0.12));
+      color: var(--hazard);
+    }
+
+    /* Type */
+    [h1] {
+      font-size: 28px;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    [h2] {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    [h3] {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    [label] {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted-soft);
+    }
+
+    [lead] {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    [code] {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular,
+                   Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+                   monospace;
+      font-size: 12px;
+    }
+
+    [code-block] {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular,
+                   Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+                   monospace;
+      font-size: 12px;
+      background: var(--code-bg);
+      border-radius: var(--r-2);
+      border: 1px solid rgba(15,23,42,0.9);
+      padding: var(--s-3);
+      overflow-x: auto;
+      line-height: 1.4;
+      position: relative;
+    }
+
+    [code-block]::before {
+      content: attr(data-lang);
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted-soft);
+    }
+
+    /* Pills */
+    [pill] {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      background: rgba(148,163,184,0.08);
+      border: 1px solid rgba(148,163,184,0.4);
+      color: var(--muted);
+    }
+
+    [pill-accent] {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      background: rgba(22,242,170,0.1);
+      border: 1px solid rgba(22,242,170,0.7);
+      color: var(--accent-strong);
+    }
+
+    [pill-hazard] {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      background: rgba(251,191,36,0.14);
+      border: 1px solid rgba(251,191,36,0.85);
+      color: var(--hazard);
+    }
+
+    /* Buttons */
+    [btn] {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid rgba(148,163,184,0.55);
+      background: rgba(15,23,42,0.96);
+      color: var(--muted);
+      cursor: pointer;
+      gap: 8px;
+      user-select: none;
+      transition:
+        background 120ms ease,
+        border-color 120ms ease,
+        transform 80ms ease,
+        box-shadow 120ms ease;
+    }
+
+    [btn]:hover {
+      background: radial-gradient(circle at top,
+        rgba(148,163,184,0.35), rgba(15,23,42,0.98));
+      border-color: rgba(226,232,240,0.9);
+      color: var(--text);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.85);
+    }
+
+    [btn]:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    [btn-accent] {
+      border-color: rgba(22,242,170,0.9);
+      color: var(--accent-strong);
+      background: radial-gradient(circle at top,
+        rgba(22,242,170,0.2), rgba(2,6,23,1));
+    }
+
+    [btn-hazard] {
+      border-color: rgba(251,191,36,0.95);
+      color: var(--hazard);
+      background: radial-gradient(circle at top,
+        rgba(251,191,36,0.23), rgba(15,23,42,1));
+    }
+
+    /* Layout shell */
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: var(--s-5) var(--s-4) var(--s-6);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: var(--s-4);
+      margin-top: var(--s-4);
+    }
+
+    @media (max-width: 930px) {
+      .grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .dns-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .dns-table th,
+    .dns-table td {
+      padding: 4px 6px;
+      border-bottom: 1px solid rgba(30,41,59,0.95);
+    }
+
+    .dns-table th {
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 10px;
+      color: var(--muted-soft);
+    }
+
+    .dns-table td:first-child {
+      font-family: "JetBrains Mono", ui-monospace;
+      font-size: 11px;
+      color: var(--accent-strong);
+    }
+
+    #ui-root {
+      min-height: 220px;
+      margin-top: var(--s-3);
+    }
+
+    #log-panel {
+      min-height: 160px;
+      max-height: 260px;
+      overflow-y: auto;
+      font-family: "JetBrains Mono", ui-monospace;
+      font-size: 11px;
+      background: radial-gradient(circle at top left,
+        rgba(15,23,42,1), rgba(3,7,18,1));
+      border-radius: var(--r-2);
+      border: 1px solid rgba(15,23,42,1);
+      padding: var(--s-2);
+    }
+
+    .log-line {
+      white-space: pre-wrap;
+      color: var(--muted-soft);
+    }
+
+    .log-line.hazard { color: var(--hazard); }
+    .log-line.ok { color: var(--accent-strong); }
+    .log-line.err { color: var(--danger); }
+
+    .cipher-preview {
+      font-family: "JetBrains Mono", ui-monospace;
+      font-size: 11px;
+      color: var(--muted-soft);
+      word-break: break-all;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="shell">
+
+  <!-- HEADER: SCXQ2 HAZARD BANNER -->
+  <header x panel-accent col gap="3">
+    <div row spread align-center gap="3">
+      <div col gap="2">
+        <div strip-hazard>
+          ☣ SCXQ2 ATOMIC INDEX · LOCAL ONLY RUNTIME
+        </div>
+        <div h1>ASX · Atomic HTML · SCXQ2</div>
+        <div lead>
+          Single-file <xt>index.html</xt> combining Atomic CSS, ASX Atomic Blocks,
+          a hazard-ciphered SCXQ2 layer, and a browser-local XJSON REST bridge.
+        </div>
+      </div>
+
+      <div col align-center gap="2" style="min-width: 240px;">
+        <div label>ATOMIC STACK</div>
+        <div class="badge-row">
+          <div pill-accent>Atomic HTML</div>
+          <div pill>Atomic CSS</div>
+          <div pill>ASX Blocks</div>
+          <div pill-hazard>SCXQ2 Cipher</div>
+          <div pill>XJSON REST</div>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <button x btn btn-accent id="btn-render-dash">
+            ☣ Render SCXQ2 Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div divider></div>
+
+    <div row wrap gap="3">
+      <div pill-accent>One static file</div>
+      <div pill>Pure browser JS</div>
+      <div pill>SCX-packed block packets</div>
+      <div pill-hazard>Hazard prefix cipher</div>
+      <div pill>Targets your current host</div>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- LEFT: CHEAT SHEET + BROWSER IP / DNS -->
+    <aside x panel-soft col gap="3">
+      <div h3>1 · Mental Model</div>
+      <div lead>
+        SCXQ2 in this file:
+      </div>
+      <ul style="margin: 0 0 0 18px; padding: 0; font-size: 13px; color: var(--muted); list-style: square;">
+        <li>Atomic HTML is the canvas.</li>
+        <li>ASX Blocks live behind a hazard cipher.</li>
+        <li>SCXQ2 IDs unlock full dashboards.</li>
+        <li>XJSON REST targets your current browser host.</li>
+      </ul>
+
+      <div divider></div>
+
+      <div h3>2 · Browser Host / XJSON</div>
+      <div lead>
+        The runtime derives the target from your current browser location:
+      </div>
+
+      <div row gap="2" style="margin-top: 6px;">
+        <div col gap="1" style="flex: 1;">
+          <div label>Browser Host</div>
+          <div id="host-value" style="font-family: 'JetBrains Mono', ui-monospace; font-size: 12px;">
+            (pending...)
+          </div>
+        </div>
+        <div col gap="1" style="flex: 1;">
+          <div label>XJSON Target URL</div>
+          <div id="xjson-url" style="font-family: 'JetBrains Mono', ui-monospace; font-size: 12px;">
+            (click "Ping XJSON /ping")
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 10px;">
+        <button x btn id="btn-ping-xjson">Ping XJSON /ping</button>
+      </div>
+
+      <div divider></div>
+
+      <div h3>3 · Static DNS Table (Local)</div>
+      <div lead>
+        SCXQ2 uses a tiny in-memory "DNS" map:
+      </div>
+
+      <table class="dns-table" style="margin-top: 6px;">
+        <thead>
+          <tr>
+            <th>Host</th>
+            <th>Address</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="dns-body">
+          <!-- Filled by runtime from DNS map -->
+        </tbody>
+      </table>
+    </aside>
+
+    <!-- RIGHT: RUNTIME + DEMO -->
+    <main x col gap="4">
+
+      <!-- PANEL: RUNTIME CONTROLS -->
+      <section x panel col gap="3">
+        <div h2>Section · Runtime Controls</div>
+        <div lead>
+          Use these controls to exercise the SCXQ2 + ASX runtime:
+        </div>
+
+        <div row wrap gap="2" style="margin-top: 6px;">
+          <button x btn btn-accent id="btn-render-dash-2">☣ Render Dashboard</button>
+          <button x btn btn-hazard id="btn-render-adv">☣ Hazard View</button>
+          <button x btn id="btn-clear-ui">Clear UI</button>
+          <button x btn id="btn-show-packets">Show Cipher Packets</button>
+        </div>
+
+        <div id="ui-root"></div>
+      </section>
+
+      <!-- PANEL: LOG + SCX MINI-CIPHER DEMO -->
+      <section x panel col gap="3">
+        <div h2>Section · Logs &amp; Cipher</div>
+        <div lead>
+          Log feed from the runtime, plus a tiny SCX control-flow cipher demo
+          using the <xt>(?) / (∴) / (💬&gt;) / (⊕)</xt> triplet.
+        </div>
+
+        <div id="log-panel"></div>
+
+        <div divider></div>
+
+        <div h3>SCX Mini-Cipher Demo</div>
+        <div lead>
+          One line of SCX script, decoded using the simple map:
+        </div>
+
+        <div code-block data-lang="scx">
+const CipherMap = {
+  "(?)": "if",
+  "(∴)": "then",
+  "(💬>)": "message",
+  "(⊕)": "increment"
+};
+
+const scxLine =
+  "(?) user.score ≥ 100 (∴) (💬>) 'Level up!' (⊕) user.score";
+        </div>
+
+        <div class="cipher-preview" id="cipher-preview"></div>
+
+        <div style="margin-top: 6px;">
+          <button x btn id="btn-run-cipher">Run SCX Line</button>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- RUNTIME LAYER: SCXQ2 + ASX + XJSON -->
+<script>
+/* ============================================================
+   LOGGING
+   ============================================================ */
+const Log = {
+  node: null,
+  ensure() {
+    if (!this.node) this.node = document.getElementById("log-panel");
+  },
+  line(msg, cls) {
+    this.ensure();
+    const div = document.createElement("div");
+    div.className = "log-line" + (cls ? " " + cls : "");
+    div.textContent = msg;
+    this.node.appendChild(div);
+    this.node.scrollTop = this.node.scrollHeight;
+  },
+  clear() {
+    this.ensure();
+    this.node.innerHTML = "";
+  }
+};
+
+/* ============================================================
+   SCXQ2 LAYER — HAZARD SIGN PREFIX
+   ============================================================ */
+
+/**
+ * SCXQ2 hazard cipher.
+ * In this demo, packets are symbolic IDs with a ☣ prefix.
+ * The decoder expands them into compressed internal objects,
+ * then normalizes them into full ASX Blocks.
+ */
+const SCXQ2 = {
+  HAZ: "☣SCX:",
+
+  PACKETS: {
+    DASH: "☣SCX:DASH",
+    ADV:  "☣SCX:ADV"
+  },
+
+  /**
+   * Decode a packet ID into a list of normalized ASX blocks.
+   * Only SCXQ2 IDs are visible at the call site.
+   */
+  decode(packetId) {
+    if (!packetId || typeof packetId !== "string") return [];
+
+    if (!packetId.startsWith(this.HAZ)) {
+      Log.line("SCXQ2: rejected non-hazard packet: " + packetId, "hazard");
+      return [];
+    }
+
+    let raw;
+    switch (packetId) {
+      case this.PACKETS.DASH:
+        raw = this._dash();
+        break;
+      case this.PACKETS.ADV:
+        raw = this._adv();
+        break;
+      default:
+        Log.line("SCXQ2: unknown packet: " + packetId, "hazard");
+        return [];
+    }
+
+    // Normalize from compact internal form to full ASX Block records.
+    return raw.map(this._normalize);
+  },
+
+  /* ------------ Internal compressed forms (short keys) ------------ */
+
+  _dash() {
+    // k: kind; c: component; p: props
+    return [
+      {
+        k: "b",
+        i: "scxq2:overview",
+        c: "Overview",
+        p: {
+          t: "SCXQ2 Atomic Index",
+          s: "Local ASX runtime — SCX-packed blocks + XJSON REST bridge.",
+          b: ["SCXQ2", "Atomic HTML", "XJSON", "Local-only"]
+        }
+      },
+      {
+        k: "b",
+        i: "scxq2:dns",
+        c: "DnsPanel",
+        p: {
+          r: [
+            { h: "xjson.local", a: "127.0.0.1", n: "XJSON CLI daemon" },
+            { h: "rig.local",   a: "127.0.0.1", n: "ASX-RIG main node" },
+            { h: "hive.local",  a: "127.0.0.1", n: "Multi-hive router shard" }
+          ]
+        }
+      },
+      {
+        k: "b",
+        i: "scxq2:rest",
+        c: "RestPanel",
+        p: {
+          pt: 7777,
+          bp: "/xjson",
+          e: ["/ping", "/status", "/blocks", "/train"]
+        }
+      }
+    ];
+  },
+
+  _adv() {
+    return [
+      {
+        k: "b",
+        i: "scxq2:metrics",
+        c: "MetricRow",
+        p: {
+          t: "Local Runtime Health",
+          m: [
+            { l: "Blocks Loaded", v: "3", s: "ok" },
+            { l: "DNS Records",   v: "3", s: "ok" },
+            { l: "Last REST Ping",v: "pending", s: "warn" }
+          ]
+        }
+      },
+      {
+        k: "b",
+        i: "scxq2:log",
+        c: "LogPanel",
+        p: {
+          ln: [
+            "SCXQ2 runtime online.",
+            "Atomic HTML / CSS shell mounted.",
+            "Waiting for XJSON /ping ..."
+          ]
+        }
+      }
+    ];
+  },
+
+  /* ------------ Normalization ------------ */
+
+  _normalize(raw) {
+    return {
+      type: "asx-block",
+      id: raw.i,
+      component: raw.c,
+      encrypted: true,
+      cipher: "SCXQ2-hazard",
+      props: (function (p) {
+        // Expand short keys into human-readable keys
+        const out = {};
+        if (p.t) out.title = p.t;
+        if (p.s) out.subtitle = p.s;
+        if (p.b) out.badges = p.b;
+
+        if (p.r) {
+          out.records = p.r.map(function (r) {
+            return {
+              host: r.h,
+              addr: r.a,
+              note: r.n
+            };
+          });
+        }
+
+        if (typeof p.pt !== "undefined") out.port = p.pt;
+        if (p.bp) out.basePath = p.bp;
+        if (p.e) out.endpoints = p.e;
+
+        if (p.t && p.m) {
+          out.title = p.t;
+          out.metrics = p.m;
+        }
+
+        if (p.ln) out.lines = p.ln;
+
+        return out;
+      })(raw.p || {})
+    };
+  }
+};
+
+/* ============================================================
+   ASX BLOCK RUNTIME
+   ============================================================ */
+const ASX = {
+  Components: {},
+
+  registerComponent(name, renderFn) {
+    this.Components[name] = renderFn;
+  },
+
+  renderBlock(block) {
+    const component = this.Components[block.component];
+    if (!component) {
+      return `
+        <div style="padding:8px;color:var(--danger);font-family:'JetBrains Mono',monospace;font-size:11px;">
+          Unknown component: ${block.component}
+        </div>
+      `;
+    }
+    try {
+      return component(block.props || {}, block);
+    } catch (err) {
+      return `
+        <div style="padding:8px;color:var(--danger);font-family:'JetBrains Mono',monospace;font-size:11px;">
+          Render error in ${block.component}: ${err.message}
+        </div>
+      `;
+    }
+  },
+
+  renderBlocks(blocks, containerId) {
+    const node = document.getElementById(containerId);
+    if (!node) return;
+    const html = blocks.map(b => this.renderBlock(b)).join("");
+    node.innerHTML = html;
+  },
+
+  renderPacket(packetId, containerId) {
+    const blocks = SCXQ2.decode(packetId);
+    Log.line("ASX: rendering " + blocks.length + " block(s) from " + packetId, "ok");
+    this.renderBlocks(blocks, containerId);
+  },
+
+  initComponents() {
+    this.registerComponent("Overview", (props) => `
+      <div x panel col gap="2">
+        <div label>SCXQ2 • ATOMIC INDEX</div>
+        <div style="font-size:20px;font-weight:650;letter-spacing:0.06em;text-transform:uppercase;">
+          ${props.title || "Overview"}
+        </div>
+        <div lead>${props.subtitle || ""}</div>
+        <div class="badge-row" style="margin-top:10px;">
+          ${(props.badges || []).map(b => `
+            <div pill>${b}</div>
+          `).join("")}
+        </div>
+      </div>
+    `);
+
+    this.registerComponent("DnsPanel", (props) => `
+      <div x panel-soft col gap="2">
+        <div h3>Static DNS Map (Local)</div>
+        <div lead>SCXQ2 internal name → address table.</div>
+        <table class="dns-table" style="margin-top:6px;">
+          <thead>
+            <tr>
+              <th>Host</th>
+              <th>Address</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(props.records || []).map(r => `
+              <tr>
+                <td>${r.host}</td>
+                <td>${r.addr}</td>
+                <td>${r.note}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `);
+
+    this.registerComponent("RestPanel", (props) => {
+      const host = window.location.hostname || "127.0.0.1";
+      const url  = `http://${host}:${props.port || 7777}${props.basePath || "/xjson"}`;
+      return `
+        <div x panel col gap="2">
+          <div h3>XJSON Local REST Bridge</div>
+          <div lead>
+            The runtime targets your browser host and a local XJSON daemon port.
+          </div>
+          <div style="font-family:'JetBrains Mono',ui-monospace;font-size:11px;margin-top:6px;">
+            <div><strong>Host:</strong> ${host}</div>
+            <div><strong>Base:</strong> ${url}</div>
+          </div>
+          <div style="margin-top:6px;">
+            <div label>Endpoints</div>
+            <div class="badge-row" style="margin-top:6px;">
+              ${(props.endpoints || []).map(e => `
+                <div pill>${props.basePath || "/xjson"}${e}</div>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    this.registerComponent("MetricRow", (props) => `
+      <div x panel-soft col gap="2">
+        <div h3>${props.title || "Runtime Metrics"}</div>
+        <div row wrap gap="2">
+          ${(props.metrics || []).map(m => `
+            <div x panel pad="2" style="
+              background:
+                radial-gradient(circle at top,
+                  rgba(15,23,42,1),
+                  rgba(15,23,42,1));
+              border-color: ${
+                m.s === "ok"
+                  ? "rgba(34,197,94,0.7)"
+                  : m.s === "warn"
+                  ? "rgba(251,191,36,0.7)"
+                  : "rgba(248,113,113,0.7)"
+              };
+              flex:1 1 120px;
+            ">
+              <div label>${m.label || ""}</div>
+              <div style="font-size:18px;font-weight:650;margin-top:4px;">
+                ${m.value || ""}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `);
+
+    this.registerComponent("LogPanel", (props) => `
+      <div x panel-soft col gap="2">
+        <div h3>Boot Log Snapshot</div>
+        <div lead>Initial SCXQ2 runtime messages.</div>
+        <div style="margin-top:6px;font-family:'JetBrains Mono',ui-monospace;font-size:11px;">
+          ${(props.lines || []).map(l => `
+            <div class="log-line">${l}</div>
+          `).join("")}
+        </div>
+      </div>
+    `);
+  }
+};
+
+/* ============================================================
+   XJSON LOCAL REST + STATIC DNS
+   ============================================================ */
+const DNS = {
+  records: {
+    "xjson.local": "127.0.0.1",
+    "rig.local":   "127.0.0.1",
+    "hive.local":  "127.0.0.1"
+  },
+  resolve(host) {
+    return this.records[host] || "127.0.0.1";
+  },
+  mountTable() {
+    const body = document.getElementById("dns-body");
+    if (!body) return;
+    body.innerHTML = "";
+    Object.keys(this.records).forEach((h) => {
+      const tr = document.createElement("tr");
+      const addr = this.records[h];
+      let note = "";
+      if (h === "xjson.local") note = "XJSON CLI daemon";
+      else if (h === "rig.local") note = "ASX-RIG main node";
+      else if (h === "hive.local") note = "Multi-hive router shard";
+      tr.innerHTML = `
+        <td>${h}</td>
+        <td>${addr}</td>
+        <td>${note}</td>
+      `;
+      body.appendChild(tr);
+    });
+  }
+};
+
+const XJSON = {
+  port: 7777,
+  basePath: "/xjson",
+  getHost() {
+    return window.location.hostname || "127.0.0.1";
+  },
+  url(endpoint) {
+    const host = this.getHost();
+    return `http://${host}:${this.port}${this.basePath}${endpoint}`;
+  },
+  async ping() {
+    const target = this.url("/ping");
+    document.getElementById("xjson-url").textContent = target;
+    Log.line("[XJSON] ping -> " + target, "ok");
+
+    try {
+      // no-cors so it doesn't throw in a typical static-file environment
+      await fetch(target, { method: "GET", mode: "no-cors" });
+      Log.line("[XJSON] /ping dispatched (no-cors, result opaque)", "ok");
+    } catch (err) {
+      Log.line("[XJSON] /ping failed: " + err.message, "err");
+    }
+  }
+};
+
+/* ============================================================
+   MINI SCX CONTROL-FLOW CIPHER DEMO
+   ============================================================ */
+const CipherMap = {
+  "(?)":  "if",
+  "(∴)":  "then",
+  "(💬>)": "message",
+  "(⊕)":  "increment"
+};
+
+const CipherDemo = {
+  state: { user: { score: 95 } },
+
+  translate(scxLine) {
+    return scxLine
+      .replace(/\(\?\)/g, CipherMap["(?)"])
+      .replace(/\(∴\)/g, CipherMap["(∴)"])
+      .replace(/\(💬>\)/g, CipherMap["(💬>)"])
+      .replace(/\(⊕\)/g, CipherMap["(⊕)"]);
+  },
+
+  run() {
+    const line = "(?) user.score ≥ 100 (∴) (💬>) 'Level up!' (⊕) user.score";
+    const human = this.translate(line);
+    const previewNode = document.getElementById("cipher-preview");
+    previewNode.textContent =
+      "SCX:  " + line + "\n" +
+      "HUM:  " + human + "\n\n";
+
+    const score = this.state.user.score;
+    if (score >= 100) {
+      Log.line("SCX mini: Level up! (score " + score + ")", "ok");
+      this.state.user.score++;
+    } else {
+      Log.line("SCX mini: score=" + score + " → keep playing", "hazard");
+    }
+  }
+};
+
+/* ============================================================
+   BOOTSTRAP
+   ============================================================ */
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Host + DNS
+  const hostNode = document.getElementById("host-value");
+  if (hostNode) {
+    hostNode.textContent = window.location.hostname || "127.0.0.1";
+  }
+  DNS.mountTable();
+
+  // Init components
+  ASX.initComponents();
+
+  Log.clear();
+  Log.line("SCXQ2: hazard-cipher runtime online.", "hazard");
+  Log.line("ASX: Atomic HTML / CSS shell mounted.", "ok");
+  Log.line("XJSON: Ready. Click 'Ping XJSON /ping'.", "ok");
+
+  // Buttons
+  const $ = (id) => document.getElementById(id);
+
+  $("btn-render-dash").onclick =
+  $("btn-render-dash-2").onclick = () => {
+    ASX.renderPacket(SCXQ2.PACKETS.DASH, "ui-root");
+  };
+
+  $("btn-render-adv").onclick = () => {
+    ASX.renderPacket(SCXQ2.PACKETS.ADV, "ui-root");
+  };
+
+  $("btn-clear-ui").onclick = () => {
+    const root = document.getElementById("ui-root");
+    if (root) root.innerHTML = "";
+    Log.line("ASX: UI cleared.", "hazard");
+  };
+
+  $("btn-show-packets").onclick = () => {
+    Log.line("SCXQ2 packet IDs:", "hazard");
+    Log.line("  " + SCXQ2.PACKETS.DASH, "hazard");
+    Log.line("  " + SCXQ2.PACKETS.ADV, "hazard");
+  };
+
+  $("btn-ping-xjson").onclick = () => {
+    XJSON.ping();
+  };
+
+  $("btn-run-cipher").onclick = () => {
+    CipherDemo.run();
+  };
+});
+</script>
+<script>
+// ===========================================
+// TAPE SELF-REGISTRATION (GHOST + KUHUL + KLH)
+// ===========================================
+
+(function(){
+
+  // -----------------------------------------
+  // 1. AUTO-DETECT TAPE FILE NAME
+  // -----------------------------------------
+  const TAPE_ID = location.pathname
+    .split('/')
+    .pop()
+    .replace('.html','')
+    .toLowerCase();
+
+  // -----------------------------------------
+  // 2. REST PING → KLH / XJSON Static API
+  // -----------------------------------------
+  fetch('/api/hive/heartbeat?tape=' + encodeURIComponent(TAPE_ID))
+    .catch(()=>{});
+
+  // -----------------------------------------
+  // 3. SERVICE WORKER → KUHUL PROCESS TABLE
+  // -----------------------------------------
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    const chan = new MessageChannel();
+
+    navigator.serviceWorker.controller.postMessage(
+      {
+        type: "TAPE_HEARTBEAT",
+        tape: TAPE_ID,
+        url: location.href,
+        time: Date.now()
+      },
+      [chan.port2]
+    );
+  }
+
+})();
+</script>
+
+</body>
+</html>

@@ -462,7 +462,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2) ΩOS Kernel API
+  // 2) KLH Hive Heartbeat API (Tape Registration)
+  if (url.pathname === '/api/hive/heartbeat') {
+    event.respondWith(handleHiveHeartbeat(url));
+    return;
+  }
+
+  // 3) ΩOS Kernel API
   if (url.pathname.startsWith('/api/ΩOS/')) {
     event.respondWith(respondΩOS(event.request));
     return;
@@ -584,7 +590,75 @@ self.addEventListener('message', (event) => {
       status: 'running'
     });
   }
+
+  // TAPE SELF-REGISTRATION (GHOST + KUHUL + KLH)
+  if (type === 'TAPE_HEARTBEAT') {
+    const { tape, url, time } = event.data;
+
+    // Register tape in kernel process table
+    const pid = `tape_${tape}_${Date.now()}`;
+    KuhulKernel.spawnProcess(pid, `⟁Tape⟁${tape}⟁Register⟁Xul`, {
+      tape_id: tape,
+      tape_url: url,
+      heartbeat_time: time,
+      status: 'active'
+    }).then(() => {
+      console.log(`[ΩOS] TAPE REGISTERED: ${tape} @ ${url}`);
+    });
+
+    // Respond to tape (optional)
+    if (event.ports && event.ports[0]) {
+      event.ports[0].postMessage({
+        ok: true,
+        tape,
+        registered: true,
+        kernel: 'ΩOS-TRINITY',
+        time: Date.now()
+      });
+    }
+  }
 });
+
+/* -------------------------------------------------------------------------
+   KLH HIVE HEARTBEAT - TAPE REGISTRATION API
+------------------------------------------------------------------------- */
+
+const REGISTERED_TAPES = new Map();
+
+async function handleHiveHeartbeat(url) {
+  const params = new URL(url).searchParams;
+  const tapeId = params.get('tape');
+
+  if (!tapeId) {
+    return new Response(JSON.stringify({ error: 'Missing tape parameter' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  // Register or update tape
+  const registration = {
+    tape_id: tapeId,
+    last_heartbeat: Date.now(),
+    status: 'active',
+    hive: 'ΩOS-KLH-PRIMARY'
+  };
+
+  REGISTERED_TAPES.set(tapeId, registration);
+
+  console.log(`[KLH HIVE] Tape heartbeat received: ${tapeId}`);
+
+  return new Response(JSON.stringify({
+    ok: true,
+    tape: tapeId,
+    registered: true,
+    hive: 'ΩOS-KLH-PRIMARY',
+    total_tapes: REGISTERED_TAPES.size,
+    time: Date.now()
+  }), {
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
 
 /* -------------------------------------------------------------------------
    TYSON-CHOMSKY FUSION ENGINE - ASXR PRIME 1.0
