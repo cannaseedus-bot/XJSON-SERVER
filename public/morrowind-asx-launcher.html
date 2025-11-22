@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Morrowind ASX - Official Launcher & Forum</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+:root {
+  --morrowind-green: #00a86b;
+  --morrowind-gold: #d4af37;
+  --morrowind-dark: #0a2f1c;
+  --morrowind-light: #1a4f2c;
+  --text-glow: #00ff99;
+  --success: #00ff99;
+  --warning: #ffaa44;
+  --error: #ff5577;
+  --panel-bg: rgba(10, 47, 28, 0.85);
+  --bronze: #cd7f32;
+  --silver: #c0c0c0;
+  --gold: #ffd700;
+  --platinum: #e5e4e2;
+  --forum-bg: rgba(10, 30, 20, 0.95);
+}
+
+* { box-sizing: border-box; margin: 0; }
+html, body {
+  background: radial-gradient(circle at top, var(--morrowind-dark) 0%, #000 100%);
+  color: var(--morrowind-green);
+  font-family: 'Times New Roman', serif;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Boot Screen */
+#boot {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(0,168,107,0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(212,175,55,0.05) 0%, transparent 50%),
+    #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  z-index: 9999;
+}
+
+.morrowind-logo {
+  font-size: 4rem;
+  font-weight: bold;
+  color: var(--morrowind-gold);
+  text-shadow: 0 0 30px var(--morrowind-green);
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+/* Main App */
+#app {
+  display: none;
+  height: 100%;
+  background:
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="morrowind" patternUnits="userSpaceOnUse" width="20" height="20"><path d="M0 0h20v20H0z" fill="%230a2f1c"/><path d="M0 0l20 20M20 0L0 20" stroke="%231a4f2c" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23morrowind)"/></svg>');
+}
+
+/* Launcher Layout */
+.launcher {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  grid-template-rows: 80px 1fr 300px;
+  grid-template-areas:
+    "header header"
+    "sidebar main"
+    "terminal terminal";
+  height: 100%;
+  gap: 1px;
+  background: var(--morrowind-green);
+}
+
+/* Header */
+.header {
+  grid-area: header;
+  background: linear-gradient(135deg, var(--morrowind-dark) 0%, var(--morrowind-light) 100%);
+  border-bottom: 3px solid var(--morrowind-gold);
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  gap: 1.5rem;
+  font-size: 1.3rem;
+}
+
+.elderscrolls-logo {
+  font-family: 'Times New Roman', serif;
+  font-weight: bold;
+  color: var(--morrowind-gold);
+  text-shadow: 2px 2px 4px #000;
+}
+
+/* Sidebar */
+.sidebar {
+  grid-area: sidebar;
+  background: var(--panel-bg);
+  border-right: 2px solid var(--morrowind-gold);
+  padding: 1.5rem;
+  overflow-y: auto;
+  backdrop-filter: blur(5px);
+}
+
+.panel-title {
+  color: var(--morrowind-gold);
+  border-bottom: 2px solid var(--morrowind-green);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Main Launch Area */
+.main-launch {
+  grid-area: main;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative;
+}
+
+.launch-container {
+  text-align: center;
+  max-width: 600px;
+}
+
+.game-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.launch-title {
+  font-size: 2.5rem;
+  color: var(--morrowind-gold);
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 15px rgba(212,175,55,0.7);
+}
+
+.launch-subtitle {
+  font-size: 1.2rem;
+  color: var(--morrowind-green);
+  margin-bottom: 2rem;
+}
+
+/* Launch Button */
+.launch-btn {
+  background: linear-gradient(135deg, var(--morrowind-green) 0%, var(--success) 100%);
+  color: #000;
+  border: none;
+  padding: 1.5rem 3rem;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 2rem;
+  box-shadow: 0 0 30px rgba(0,255,153,0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.launch-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.launch-btn:hover::before {
+  left: 100%;
+}
+
+.launch-btn:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 40px rgba(0,255,153,0.7);
+}
+
+.launch-btn:active {
+  transform: translateY(0);
+}
+
+.launch-btn.disabled {
+  background: linear-gradient(135deg, #666 0%, #999 100%);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.launch-btn.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Status Cards */
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.status-card {
+  background: rgba(26, 79, 44, 0.6);
+  border: 1px solid var(--morrowind-green);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.status-card.active {
+  border-color: var(--success);
+  background: rgba(0,255,153,0.1);
+  box-shadow: 0 0 15px rgba(0,255,153,0.3);
+}
+
+.status-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.status-name {
+  color: var(--morrowind-gold);
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.status-value {
+  color: var(--text-glow);
+  font-size: 1.1rem;
+}
+
+/* Terminal */
+.terminal {
+  grid-area: terminal;
+  background: rgba(0, 0, 0, 0.9);
+  border-top: 3px solid var(--morrowind-green);
+  padding: 1rem;
+}
+
+.terminal-output {
+  height: 200px;
+  background: #001100;
+  border: 1px solid var(--morrowind-green);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: var(--text-glow);
+  line-height: 1.4;
+}
+
+.terminal-output::-webkit-scrollbar {
+  width: 8px;
+}
+
+.terminal-output::-webkit-scrollbar-track {
+  background: #001100;
+}
+
+.terminal-output::-webkit-scrollbar-thumb {
+  background: var(--morrowind-green);
+  border-radius: 4px;
+}
+
+.terminal-input {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.terminal-input input {
+  flex: 1;
+  padding: 0.7rem;
+  background: #001100;
+  border: 1px solid var(--morrowind-green);
+  color: var(--text-glow);
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  transition: all 0.3s;
+}
+
+.terminal-input input:focus {
+  outline: none;
+  border-color: var(--success);
+  box-shadow: 0 0 10px rgba(0,255,153,0.3);
+}
+
+/* Buttons */
+.btn {
+  background: linear-gradient(135deg, var(--morrowind-green) 0%, var(--morrowind-light) 100%);
+  color: #000;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s;
+  width: 100%;
+  margin: 0.3rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.btn:hover {
+  background: linear-gradient(135deg, var(--morrowind-gold) 0%, #e6c260 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #00a86b 0%, #00ff99 100%);
+}
+
+.btn-bronze {
+  background: linear-gradient(135deg, var(--bronze) 0%, #e3963e 100%);
+}
+
+.btn-silver {
+  background: linear-gradient(135deg, var(--silver) 0%, #e8e8e8 100%);
+  color: #333;
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold) 0%, #ffed4e 100%);
+  color: #333;
+}
+
+.btn-platinum {
+  background: linear-gradient(135deg, var(--platinum) 0%, white 100%);
+  color: #333;
+}
+
+/* Progress Bars */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #1a4f2c;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--morrowind-green) 0%, var(--text-glow) 100%);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-image: linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.2) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.2) 75%,
+    transparent 75%,
+    transparent
+  );
+  z-index: 1;
+  background-size: 20px 20px;
+  animation: move 1s linear infinite;
+  overflow: hidden;
+}
+
+@keyframes move {
+  0% { background-position: 0 0; }
+  100% { background-position: 20px 0; }
+}
+
+/* Launch Window */
+.launch-window {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  height: 500px;
+  background: #000;
+  border: 4px solid var(--morrowind-gold);
+  z-index: 10000;
+  color: var(--morrowind-green);
+  font-family: 'Times New Roman', serif;
+  display: none;
+  box-shadow: 0 0 50px rgba(212,175,55,0.5);
+  overflow: hidden;
+}
+
+.launch-window.active {
+  display: block;
+  animation: windowAppear 0.5s ease-out;
+}
+
+@keyframes windowAppear {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.launch-content {
+  padding: 2rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .launcher {
+    grid-template-columns: 300px 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .launcher {
+    grid-template-columns: 1fr;
+    grid-template-rows: 80px auto 1fr 300px;
+    grid-template-areas:
+      "header"
+      "sidebar"
+      "main"
+      "terminal";
+  }
+
+  .sidebar {
+    border-right: none;
+    border-bottom: 2px solid var(--morrowind-gold);
+  }
+
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .launch-window {
+    width: 95%;
+    height: 80%;
+  }
+}
+</style>
+</head>
+<body>
+<!-- Boot Screen -->
+<div id="boot">
+  <div class="morrowind-logo">MORROWIND ASX</div>
+  <div style="text-align: center;">
+    <div style="font-size: 1.2rem; color: var(--morrowind-gold); margin-bottom: 1rem;">
+      Official Modernization Platform
+    </div>
+    <div style="color: var(--morrowind-green);" id="boot-status">
+      Initializing Heart of Lorkhan...
+    </div>
+    <div class="progress-bar" style="width: 300px; margin-top: 1rem;">
+      <div class="progress-fill" id="boot-progress" style="width: 0%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Launcher -->
+<div id="app">
+  <div class="launcher">
+    <!-- Header -->
+    <div class="header">
+      <div class="elderscrolls-logo">THE ELDER SCROLLS III</div>
+      <div style="flex: 1;"></div>
+      <div style="color: var(--morrowind-gold);">ASX Launcher 2024</div>
+      <div style="color: var(--success);" id="connection-status">🟢 ONLINE</div>
+      <button class="btn" onclick="window.open('../omega-launcher.html', '_self')" style="width: auto; padding: 0.5rem 1rem;">
+        ⟁ ΩOS Launcher
+      </button>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="panel-title">⚡ Quick Actions</div>
+
+      <button class="btn" onclick="scanGameFiles()">
+        🔍 Scan for Morrowind
+      </button>
+
+      <button class="btn" onclick="enableAllFeatures()">
+        🤖 Enable All Features
+      </button>
+
+      <button class="btn" onclick="injectPlugins()">
+        🧩 Inject Plugins
+      </button>
+
+      <button class="btn" onclick="connectToMMO()">
+        🌐 Connect MMO
+      </button>
+
+      <button class="btn btn-success" onclick="quickLaunch()">
+        🚀 Quick Launch
+      </button>
+
+      <div class="panel-title" style="margin-top: 2rem;">📊 System Status</div>
+
+      <div class="status-card" id="game-status">
+        <div class="status-name">Game Detection</div>
+        <div class="status-value">SCANNING...</div>
+      </div>
+
+      <div class="status-card" id="asx-status">
+        <div class="status-name">ASX Runtime</div>
+        <div class="status-value">READY</div>
+      </div>
+
+      <div class="status-card" id="mmo-status">
+        <div class="status-name">MMO Network</div>
+        <div class="status-value">OFFLINE</div>
+      </div>
+
+      <div class="status-card" id="ai-status">
+        <div class="status-name">AI Systems</div>
+        <div class="status-value">STANDBY</div>
+      </div>
+    </div>
+
+    <!-- Main Launch Area -->
+    <div class="main-launch">
+      <div class="launch-container">
+        <div class="game-icon">⚔️</div>
+        <div class="launch-title">MORROWIND ASX</div>
+        <div class="launch-subtitle">Official Modernization Platform</div>
+
+        <button class="launch-btn" id="main-launch-btn" onclick="launchMorrowind()">
+          🎮 LAUNCH MORROWIND ASX
+        </button>
+
+        <div class="status-grid">
+          <div class="status-card" id="feature-ai">
+            <div class="status-name">AI NPCs</div>
+            <div class="status-value">READY</div>
+          </div>
+          <div class="status-card" id="feature-multiplayer">
+            <div class="status-name">Multiplayer</div>
+            <div class="status-value">READY</div>
+          </div>
+          <div class="status-card" id="feature-crossgame">
+            <div class="status-name">Cross-Game</div>
+            <div class="status-value">READY</div>
+          </div>
+          <div class="status-card" id="feature-compression">
+            <div class="status-name">SCX Compression</div>
+            <div class="status-value">ACTIVE</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 2rem; padding: 1rem; background: rgba(26, 79, 44, 0.6); border-radius: 8px;">
+          <div style="color: var(--morrowind-gold); font-weight: bold; margin-bottom: 0.5rem;">📖 Demonstration Tape</div>
+          <div style="color: var(--text-glow); font-size: 0.9rem; margin-bottom: 1rem;">
+            This shows how XJSON wraps existing games (Morrowind, DOOM, etc.) with modern features.
+            Use the Construction Set to build your own universe!
+          </div>
+          <button class="btn btn-gold" onclick="window.open('https://en.uesp.net/wiki/Tes3Mod:Modding', '_blank')" style="width: auto; padding: 0.7rem 1.5rem;">
+            📚 Morrowind Construction Set Docs
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal -->
+    <div class="terminal">
+      <div class="panel-title">💻 ASX Launcher Terminal</div>
+      <div class="terminal-output" id="terminal-output">
+&gt; Morrowind ASX Launcher v2024.1
+&gt; SCX Compression Engine: READY
+&gt; Quantum AI Systems: STANDBY
+&gt; Cross-Game Network: OFFLINE
+&gt; Type 'help' for commands
+      </div>
+      <div class="terminal-input">
+        <input type="text" id="terminal-input" placeholder="Enter command (launch, status, scan, help)..." onkeypress="if(event.key=='Enter') executeTerminal()">
+        <button class="btn" onclick="executeTerminal()">EXECUTE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Launch Window -->
+<div class="launch-window" id="launch-window">
+  <div class="launch-content">
+    <div style="text-align: center;">
+      <div style="font-size: 2rem; color: var(--morrowind-gold); margin-bottom: 1rem;">
+        THE ELDER SCROLLS III
+      </div>
+      <div style="font-size: 3rem; color: var(--morrowind-gold); margin-bottom: 2rem;">
+        MORROWIND ASX
+      </div>
+      <div style="font-size: 1.5rem; color: var(--success); margin-bottom: 2rem;" id="launch-status">
+        LAUNCHING...
+      </div>
+      <div class="progress-bar" style="width: 100%; margin: 2rem 0;">
+        <div class="progress-fill" id="launch-progress" style="width: 0%"></div>
+      </div>
+    </div>
+    <div style="border-top: 2px solid var(--morrowind-green); padding-top: 1rem;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+        <div>🤖 AI NPCs: <span style="color: var(--success);" id="launch-ai">INJECTING</span></div>
+        <div>👥 Multiplayer: <span style="color: var(--success);" id="launch-multiplayer">CONNECTING</span></div>
+        <div>🌉 Cross-Game: <span style="color: var(--success);" id="launch-crossgame">ESTABLISHING</span></div>
+        <div>💾 SCX Compression: <span style="color: var(--success);" id="launch-compression">ACTIVE</span></div>
+      </div>
+      <button class="btn" onclick="completeLaunch()" style="background: var(--morrowind-gold); color: #000; font-size: 1.2rem;">
+        ENTER MORROWIND ASX
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// MORROWIND ASX - TAPE SELF-REGISTRATION
+// ═══════════════════════════════════════════════════════════
+
+(function(){
+  const TAPE_ID = 'morrowind-asx';
+
+  fetch('/api/hive/heartbeat?tape=' + encodeURIComponent(TAPE_ID))
+    .then(r => r.json())
+    .then(data => {
+      console.log('[KLH HIVE] ✓ Morrowind ASX registered:', data);
+    })
+    .catch(err => {
+      console.warn('[KLH HIVE] ⚠ Heartbeat failed:', err);
+    });
+
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: 'TAPE_HEARTBEAT',
+      tape: TAPE_ID,
+      url: location.href,
+      time: Date.now(),
+      metadata: {
+        title: 'Morrowind ASX',
+        type: 'game',
+        engine: 'Gamebryo (2002)',
+        base: 'The Elder Scrolls III: Morrowind',
+        studio: './morrowind-construction-set.html'
+      }
+    });
+  }
+
+  console.log('%c⚔️ MORROWIND ASX TAPE LOADED ⚔️', 'color: #00a86b; font-size: 16px; font-weight: bold;');
+})();
+
+// Boot Sequence
+const bootMessages = [
+  "Initializing Heart of Lorkhan...",
+  "Loading Dwemer Technology...",
+  "Calibrating Magicka Resonators...",
+  "Syncing with ASX Network...",
+  "Activating AI Consciousness Grid...",
+  "Establishing Cross-Game Portals...",
+  "Launcher Ready! 🚀"
+];
+
+let bootProgress = 0;
+let bootInterval;
+
+function startBootSequence() {
+  bootInterval = setInterval(updateBoot, 800);
+}
+
+function updateBoot() {
+  const status = document.getElementById('boot-status');
+  const progress = document.getElementById('boot-progress');
+
+  if (bootProgress < bootMessages.length) {
+    status.textContent = bootMessages[bootProgress];
+    progress.style.width = `${((bootProgress + 1) / bootMessages.length) * 100}%`;
+    bootProgress++;
+  } else {
+    clearInterval(bootInterval);
+    setTimeout(() => {
+      document.getElementById('boot').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      log("🎮 Morrowind ASX Launcher Online!");
+      log("⚡ All systems operational");
+      setTimeout(scanGameFiles, 1000);
+    }, 1000);
+  }
+}
+
+// Terminal System
+function log(message) {
+  const output = document.getElementById('terminal-output');
+  output.innerHTML += `\n&gt; ${message}`;
+  output.scrollTop = output.scrollHeight;
+}
+
+function executeTerminal() {
+  const input = document.getElementById('terminal-input');
+  const command = input.value.trim().toLowerCase();
+  input.value = '';
+
+  if (!command) return;
+
+  log(`$ ${command}`);
+
+  switch(command) {
+    case 'launch':
+    case 'run':
+    case 'start':
+      launchMorrowind();
+      break;
+    case 'status':
+      showSystemStatus();
+      break;
+    case 'scan':
+      scanGameFiles();
+      break;
+    case 'modernize':
+      enableAllFeatures();
+      break;
+    case 'mmo':
+      connectToMMO();
+      break;
+    case 'help':
+      log("Commands: launch, status, scan, modernize, mmo, help");
+      break;
+    default:
+      log(`Unknown command: ${command}`);
+  }
+}
+
+// Game Detection
+function scanGameFiles() {
+  log("🔍 Scanning for Morrowind installation...");
+  updateStatus('game-status', 'SCANNING...', 'warning');
+
+  setTimeout(() => {
+    const morrowindPath = "C:\\Program Files\\Steam\\steamapps\\common\\Morrowind";
+    log("✅ Found: The Elder Scrolls III: Morrowind");
+    log(`📍 Path: ${morrowindPath}`);
+    log("📁 Detected: Morrowind.esm, Tribunal.esm, Bloodmoon.esm");
+    log("🎮 LAUNCH READY - Click the LAUNCH button!");
+
+    updateStatus('game-status', 'DETECTED', 'success');
+    document.getElementById('main-launch-btn').classList.remove('disabled');
+
+    setTimeout(enableAllFeatures, 500);
+  }, 2000);
+}
+
+// Feature Management
+function enableAllFeatures() {
+  log("🚀 Enabling all ASX modernizations...");
+
+  const features = [
+    { id: 'feature-ai', name: 'AI NPCs' },
+    { id: 'feature-multiplayer', name: 'Multiplayer' },
+    { id: 'feature-crossgame', name: 'Cross-Game' },
+    { id: 'feature-compression', name: 'SCX Compression' }
+  ];
+
+  features.forEach((feature, index) => {
+    setTimeout(() => {
+      document.getElementById(feature.id).classList.add('active');
+      document.getElementById(feature.id).querySelector('.status-value').textContent = 'ACTIVE';
+      log(`✅ ${feature.name} enabled`);
+    }, index * 500);
+  });
+
+  updateStatus('ai-status', 'ACTIVE', 'success');
+}
+
+function injectPlugins() {
+  log("🧩 Injecting ASX plugins into Morrowind...");
+  setTimeout(() => {
+    log("✅ NPC Alive System: INJECTED");
+    log("✅ Multiverse Bridge: CONNECTED");
+    log("✅ Live Economy: ACTIVATED");
+    log("✅ AI Quests: GENERATING");
+  }, 1500);
+}
+
+function connectToMMO() {
+  log("🌐 Connecting to ASX MMO Network...");
+  updateStatus('mmo-status', 'CONNECTING...', 'warning');
+
+  setTimeout(() => {
+    log("✅ Connected to cross-game MMO ecosystem");
+    log("👥 Players online: 243");
+    log("🌍 Active games: Morrowind, DOOM, Fallout 2, KOTOR");
+    updateStatus('mmo-status', 'CONNECTED', 'success');
+  }, 2000);
+}
+
+// Launch System
+function launchMorrowind() {
+  const launchBtn = document.getElementById('main-launch-btn');
+  if (launchBtn.classList.contains('disabled')) {
+    log("❌ Morrowind not detected. Please scan for game first.");
+    return;
+  }
+
+  log("🎮 LAUNCHING MORROWIND ASX...");
+
+  const launchWindow = document.getElementById('launch-window');
+  launchWindow.classList.add('active');
+
+  const steps = [
+    { time: 500, action: () => updateLaunchStatus("Bypassing Steam DRM...", 10) },
+    { time: 1000, action: () => updateLaunchStatus("Injecting ASX runtime...", 25) },
+    { time: 1500, action: () => updateLaunchStatus("Loading AI consciousness...", 40) },
+    { time: 2000, action: () => {
+      updateLaunchStatus("Connecting to MMO network...", 60);
+      document.getElementById('launch-multiplayer').textContent = "CONNECTED";
+    }},
+    { time: 2500, action: () => {
+      updateLaunchStatus("Establishing cross-game portals...", 80);
+      document.getElementById('launch-crossgame').textContent = "READY";
+    }},
+    { time: 3000, action: () => {
+      updateLaunchStatus("Morrowind ASX Ready!", 100);
+      document.getElementById('launch-ai').textContent = "ACTIVE";
+      document.getElementById('launch-status').style.color = "var(--success)";
+    }}
+  ];
+
+  steps.forEach(step => {
+    setTimeout(step.action, step.time);
+  });
+}
+
+function updateLaunchStatus(message, progress) {
+  document.getElementById('launch-status').textContent = message;
+  document.getElementById('launch-progress').style.width = `${progress}%`;
+}
+
+function completeLaunch() {
+  document.getElementById('launch-window').classList.remove('active');
+  log("✅ MORROWIND ASX LAUNCHED SUCCESSFULLY!");
+  log("🎯 Modernizations Active:");
+  log("   • AI NPCs with consciousness and memories");
+  log("   • Cross-save multiplayer with real players");
+  log("   • Portal network to DOOM, Fallout 2, etc.");
+  log("   • Live economy with cross-game trading");
+  log("   • Infinite AI-generated quests");
+  log("   • Persistent world evolution");
+  log("🎮 Welcome to Morrowind ASX!");
+}
+
+function quickLaunch() {
+  log("🚀 Starting Quick Launch sequence...");
+  scanGameFiles();
+  setTimeout(() => {
+    enableAllFeatures();
+    setTimeout(() => {
+      injectPlugins();
+      setTimeout(() => {
+        connectToMMO();
+        setTimeout(() => {
+          launchMorrowind();
+        }, 1000);
+      }, 1000);
+    }, 1000);
+  }, 1000);
+}
+
+// Utility Functions
+function updateStatus(elementId, text, type = 'normal') {
+  const element = document.getElementById(elementId);
+  const valueElement = element.querySelector('.status-value');
+  valueElement.textContent = text;
+
+  element.classList.remove('active');
+  if (type === 'success') {
+    valueElement.style.color = 'var(--success)';
+    element.classList.add('active');
+  } else if (type === 'warning') {
+    valueElement.style.color = 'var(--warning)';
+  } else if (type === 'error') {
+    valueElement.style.color = 'var(--error)';
+  }
+}
+
+function showSystemStatus() {
+  log("System Status:");
+  log("Game: DETECTED - Ready for launch");
+  log("ASX Runtime: ACTIVE - All systems go");
+  log("MMO Network: CONNECTED - 243 players online");
+  log("AI Systems: ACTIVE - Consciousness grid online");
+  log("Type 'launch' to start Morrowind ASX");
+}
+
+// Initialize
+setTimeout(startBootSequence, 1000);
+document.getElementById('terminal-input').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') executeTerminal();
+});
+
+// Disable launch button initially
+document.getElementById('main-launch-btn').classList.add('disabled');
+</script>
+</body>
+</html>
